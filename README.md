@@ -102,20 +102,24 @@ python manage.py runserver
 ```
 
 ---
+## 🎯 Live System Preview
 
-## Example Usage
+A fully functional AI-powered document chat system using RAG architecture.
 
-```bash
-curl -X POST http://127.0.0.1:8000/api/upload/ \
-  -F "title=Test Document" \
-  -F "file=@sample.docx"
-```
+### 🏠 Dashboard
+![Dashboard](screenshots/dashboard.png)
 
-```bash
-curl -X POST http://127.0.0.1:8000/api/chat/1/ \
-  -H "Content-Type: application/json" \
-  -d '{"message":"What is this document about?"}'
-```
+### 📤 Upload Document
+![Upload](screenshots/upload.png)
+
+### 📄 Document Preview
+![Preview](screenshots/doc_preview.png)
+
+### 💬 AI Chat Interface
+![Chat](screenshots/chat_screen_with_doc.png)
+
+### 🧩 Document Chunks View
+![Chunks](screenshots/chunks.png)
 
 ---
 
