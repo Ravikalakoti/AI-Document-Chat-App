@@ -16,7 +16,7 @@ The system extracts document text, generates embeddings with Ollama, stores them
 - Retrieve relevant chunks using vector similarity search.
 - Generate grounded answers with a local LLM.
 
-Ollama supports embeddings for RAG workflows, and ChromaDB is designed to manage collections of embeddings for query-time retrieval. [web:4][web:27]
+Ollama supports embeddings for RAG workflows, and ChromaDB is designed to manage collections of embeddings for query-time retrieval.
 
 ---
 
@@ -56,7 +56,7 @@ Ollama supports embeddings for RAG workflows, and ChromaDB is designed to manage
 9. The query is embedded and matched against stored vectors.
 10. Relevant chunks are sent to the LLM for final answer generation.
 
-This is the standard retrieve-then-generate pattern used in RAG systems. [web:80][web:83][web:71]
+This is the standard retrieve-then-generate pattern used in RAG systems.
 
 ---
 
