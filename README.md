@@ -1,307 +1,131 @@
-# AI Document Chat System
+# AI Document Chat with RAG
 
-A local-first AI-powered document assistant built with Django, ChromaDB, and Ollama.  
-Upload documents, extract and index their content into a vector database, and chat with them using retrieval-augmented generation (RAG).
+A Django application that allows users to upload documents and chat with them using Retrieval-Augmented Generation (RAG).
 
----
-
-## Overview
-
-This project demonstrates a full RAG pipeline in a practical Django application:
-
-- Document upload and storage.
-- Text extraction from uploaded files.
-- Chunking and embedding generation.
-- Vector storage in ChromaDB.
-- Semantic retrieval using query embeddings.
-- Response generation using a local Ollama model.
-
-The system is designed to run locally without external API costs, making it ideal for privacy-sensitive workflows and offline development. Ollama supports embedding models for RAG applications, and ChromaDB provides collection-based vector search. [web:4][web:30][web:27]
+The system extracts document text, generates embeddings with Ollama, stores them in ChromaDB, and retrieves relevant context to answer user questions using a local LLM.
 
 ---
 
-## Features
+## What It Does
 
-- Upload documents from the browser.
-- Preview supported files in the UI.
-- Convert office documents using LibreOffice headless mode.
-- Extract and clean text from documents.
-- Split document content into semantic chunks.
-- Generate embeddings locally with Ollama.
+- Upload office documents and text files.
+- Extract and clean document text.
+- Split text into chunks for semantic indexing.
+- Generate embeddings locally using Ollama.
 - Store embeddings in ChromaDB.
-- Ask natural-language questions about uploaded documents.
-- Retrieve relevant context and generate grounded answers.
-- Fully local, free, and developer-friendly.
+- Retrieve relevant chunks using vector similarity search.
+- Generate grounded answers with a local LLM.
 
-LibreOffice command-line conversion supports common office-document workflows, and ChromaDB manages collections of embeddings for query-time retrieval. [web:17][web:27]
+Ollama supports embeddings for RAG workflows, and ChromaDB is designed to manage collections of embeddings for query-time retrieval. [web:4][web:27]
+
+---
+
+## Core Features
+
+- **Document ingestion** for uploaded files.
+- **Text preprocessing** and chunking.
+- **Local embeddings** without external API keys.
+- **Vector search** using ChromaDB.
+- **RAG-based question answering**.
+- **Private, offline-capable AI workflow**.
+- **Django REST API** for upload and chat.
 
 ---
 
 ## Tech Stack
-
-- **Backend:** Django, Django REST Framework
-- **AI / LLM:** Ollama
-- **Vector Database:** ChromaDB
-- **Document Processing:** LibreOffice, BeautifulSoup
-- **Frontend:** Bootstrap 5, HTML, CSS, JavaScript
-- **Runtime:** Python 3.12+ recommended
-
-Ollama provides both Python libraries and REST APIs for model integration, which makes it easy to connect local embeddings and chat models to a Django app. [web:37][web:4]
-
----
-
-## Architecture
-
-```mermaid
-flowchart LR
-A[User Uploads Document] --> B[Django Saves File]
-B --> C[LibreOffice Converts File]
-C --> D[Text Extraction]
-D --> E[Chunking]
-E --> F[Ollama Embeddings]
-F --> G[ChromaDB Storage]
-H[User Question] --> I[Query Embedding]
-I --> J[ChromaDB Retrieval]
-J --> K[Ollama Answer Generation]
-K --> L[Final Response]
-```
-
----
-
-## Project Structure
-
-```bash
-ai_doc_chat/
-├── manage.py
-├── README.md
-├── requirements.txt
-├── media/
-├── static/
-├── ai_doc_chat/
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-└── docs/
-    ├── models.py
-    ├── views.py
-    ├── urls.py
-    ├── utils.py
-    ├── embeddings.py
-    ├── vector_store.py
-    └── templates/
-        └── docs/
-            ├── base.html
-            ├── dashboard.html
-            ├── upload.html
-            └── document_detail.html
-```
-
----
-
-## How It Works
-
-1. User uploads a document.
-2. Django stores the file in `media/`.
-3. LibreOffice converts supported office files to HTML.
-4. The app extracts clean text from the converted output.
-5. Text is split into chunks.
-6. Each chunk is embedded using Ollama.
-7. Embeddings are stored in ChromaDB.
-8. On chat, the user query is embedded too.
-9. ChromaDB returns the most relevant chunks.
-10. Ollama generates the final answer using retrieved context.
-
-This is a standard RAG flow: retrieve first, then generate. Ollama’s embedding workflow is explicitly designed for applications like this. [web:4][web:71]
-
----
-
-## Requirements
-
-### System
-- macOS or Linux
-- Python 3.12+
-- Homebrew (for macOS)
-- LibreOffice
-- Ollama
-
-### Python packages
-- Django
-- djangorestframework
-- chromadb
-- ollama
-- beautifulsoup4
-- python-docx
-- odfpy
-
----
-
-## Installation
-
-### 1. Clone repository
-```bash
-git clone <your-repo-url>
-cd ai_doc_chat
-```
-
-### 2. Create virtual environment
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Install system tools
-```bash
-brew install --cask libreoffice
-brew install ollama
-```
-
-### 5. Pull Ollama models
-```bash
-ollama pull llama3.1
-ollama pull nomic-embed-text
-```
-
-Ollama supports embedding models directly, and Chroma provides integration patterns for Ollama embeddings. [web:4][web:1]
-
----
-
-## Configuration
-
-### `settings.py`
-```python
-INSTALLED_APPS = [
-    'rest_framework',
-    'docs',
-]
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-```
-
-### Optional environment variables
-```env
-DEBUG=True
-SECRET_KEY=replace-me
-```
-
----
-
-## API Endpoints
-
-### Upload document
-`POST /api/upload/`
-
-Form-data:
-- `title`
-- `file`
-
-### Chat with document
-`POST /api/chat/<doc_id>/`
-
-JSON:
-```json
-{
-  "message": "What is this document about?"
-}
-```
-
-### View document page
-`GET /doc/<doc_id>/`
-
-Django REST Framework is a natural fit for multipart uploads and JSON chat endpoints. [web:29][web:32][web:38]
-
----
-
-## Example Usage
-
-### Upload
-```bash
-curl -X POST http://127.0.0.1:8000/api/upload/ \
-  -F "title=Test Document" \
-  -F "file=@/path/to/sample.docx"
-```
-
-### Chat
-```bash
-curl -X POST http://127.0.0.1:8000/api/chat/1/ \
-  -H "Content-Type: application/json" \
-  -d '{"message":"Summarize this document"}'
-```
-
----
-
-## Screenshots
-
-Add screenshots here after UI finalization:
-
-- Dashboard
-- Upload page
-- Document preview
-- Chat interface
-
----
-
-## Troubleshooting
-
-### 1. Empty embeddings error
-If Chroma returns an error about empty embeddings, the document text extraction likely failed or no chunks were generated. Add validation before `collection.add()` and skip empty chunks.
-
-### 2. Ollama model not responding
-Make sure the Ollama service is running:
-```bash
-ollama serve
-```
-
-### 3. Document preview not showing
-Check if LibreOffice conversion succeeded and whether `html_path` exists.
-
-### 4. Unsupported file type
-Add file-type validation before processing.
-
-Chroma collection add/query operations expect valid non-empty embedding records, so defensive checks are important in the upload pipeline. [web:27][web:62][web:65]
-
----
-
-## Future Enhancements
-
-- Support for PDF ingestion.
-- Background jobs with Celery.
-- Streaming chat responses.
-- Authentication and per-user document isolation.
-- Cross-document search.
-- Conversation history.
-- Better semantic chunking.
-- Export answers as notes or markdown.
-
----
-
-## Why This Project Matters
-
-This project demonstrates practical skills in:
-
-- Django backend architecture.
-- REST API design.
-- Document parsing and preprocessing.
-- Vector database usage.
-- Local LLM integration.
-- Retrieval-augmented generation.
-- Privacy-first AI system design.
-
-It is a strong portfolio project because it combines backend engineering, AI integration, and production-style UI into one complete product. RAG intro projects commonly emphasize the same pipeline: store knowledge, retrieve context, and generate grounded answers. [web:71][web:73][web:79]
-
----
-
-## Acknowledgements
 
 - Django
 - Django REST Framework
 - Ollama
 - ChromaDB
 - LibreOffice
+- BeautifulSoup
+
+---
+
+## RAG Flow
+
+1. User uploads a document.
+2. Django saves the file.
+3. LibreOffice converts supported files to HTML.
+4. Text is extracted and cleaned.
+5. Text is split into chunks.
+6. Each chunk is embedded using Ollama.
+7. ChromaDB stores the vectors.
+8. User asks a question.
+9. The query is embedded and matched against stored vectors.
+10. Relevant chunks are sent to the LLM for final answer generation.
+
+This is the standard retrieve-then-generate pattern used in RAG systems. [web:80][web:83][web:71]
+
+---
+
+## Why This Project Matters
+
+This project demonstrates practical AI engineering skills in:
+
+- Building a full RAG pipeline.
+- Working with local LLMs and embeddings.
+- Designing a vector database workflow.
+- Integrating document processing with AI.
+- Creating a privacy-first AI application.
+
+---
+
+## APIs
+
+### Upload
+`POST /api/upload/`
+
+### Chat
+`POST /api/chat/<doc_id>/`
+
+### Document View
+`GET /doc/<doc_id>/`
+
+---
+
+## Setup
+
+```bash
+git clone <repo-url>
+cd ai_doc_chat
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+brew install --cask libreoffice
+brew install ollama
+ollama pull llama3.1
+ollama pull nomic-embed-text
+python manage.py migrate
+python manage.py runserver
+```
+
+---
+
+## Example Usage
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/upload/ \
+  -F "title=Test Document" \
+  -F "file=@sample.docx"
+```
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat/1/ \
+  -H "Content-Type: application/json" \
+  -d '{"message":"What is this document about?"}'
+```
+
+---
+
+## Future Scope
+
+- PDF support
+- Chat history
+- User authentication
+- Background indexing
+- Cross-document search
+- Response streaming
+
+---
