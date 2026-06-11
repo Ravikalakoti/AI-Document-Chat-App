@@ -1,76 +1,159 @@
 from pathlib import Path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+
 from .models import Document, DocumentChunk
-from .utils import convert_document_to_html, extract_text_from_html, chunk_text
+from .utils import (
+    convert_document_to_html,
+    extract_text_from_html,
+    extract_text_from_file,   # 🔥 FIX ADDED (IMPORTANT)
+    chunk_text
+)
+
 from .vector_store import reset_collection, get_collection
 from .embeddings import get_embedding
 import ollama
 
+
+# -------------------------
+# DASHBOARD
+# -------------------------
 def dashboard(request):
     docs = Document.objects.order_by('-created_at')
     return render(request, 'docs/dashboard.html', {'docs': docs})
 
+
+# -------------------------
+# UPLOAD PAGE
+# -------------------------
 def upload_page(request):
     return render(request, 'docs/upload.html')
 
+
+# -------------------------
+# DOCUMENT DETAIL
+# -------------------------
 def document_detail(request, doc_id):
     doc = get_object_or_404(Document, id=doc_id)
     chunks = doc.chunks.all().order_by('chunk_index')
-    return render(request, 'docs/document_detail.html', {'doc': doc, 'chunks': chunks})
+    return render(request, 'docs/document_detail.html', {
+        'doc': doc,
+        'chunks': chunks
+    })
 
+
+# -------------------------
+# UPLOAD + INDEXING (FIXED)
+# -------------------------
 @api_view(['POST'])
 def upload_document(request):
     title = request.data.get('title')
     file = request.FILES.get('file')
 
     if not title or not file:
-        return Response({'error': 'title and file required'}, status=status.HTTP_400_BAD_REQUEST)
-    print("pppppppppp", file , title)
+        return Response(
+            {'error': 'title and file required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    print("UPLOAD:", title, file)
+
+    # Save document
     doc = Document.objects.create(title=title, file=file)
 
-    ext = Path(doc.file.path).suffix.lower()
-    html_path = None
+    # -------------------------
+    # TEXT EXTRACTION (FIXED)
+    # -------------------------
+    text = extract_text_from_file(doc.file.path)
 
-    if ext in ['.doc', '.docx', '.odt', '.odf']:
-        html_path = convert_document_to_html(doc.file.path)
-        if html_path.exists():
-            doc.html_path = str(html_path.relative_to(settings.BASE_DIR))
+    print("EXTRACTED TEXT LENGTH:", len(text))
 
-    text = ''
-    if html_path and html_path.exists():
-        text = extract_text_from_html(html_path)
-    print("pppp", text)
+    if not text.strip():
+        return Response(
+            {'error': 'No text extracted from file'},
+            status=400
+        )
+
     doc.extracted_text = text
     doc.save()
 
+    # -------------------------
+    # CHUNKING
+    # -------------------------
     chunks = chunk_text(text)
 
+    if not chunks:
+        return Response(
+            {'error': 'No chunks generated'},
+            status=400
+        )
+
+    # Remove old chunks
     DocumentChunk.objects.filter(document=doc).delete()
+
     chunk_objs = []
     embeddings = []
     ids = []
 
+    # -------------------------
+    # EMBEDDINGS (SAFE FIX)
+    # -------------------------
     for i, chunk in enumerate(chunks):
-        chunk_objs.append(DocumentChunk(document=doc, chunk_index=i, text=chunk))
-        embeddings.append(get_embedding(chunk))
-        ids.append(f'{doc.id}_{i}')
+        emb = get_embedding(chunk)
 
+        if not emb:
+            print(f"Skipping chunk {i} (embedding failed)")
+            continue
+
+        chunk_objs.append(
+            DocumentChunk(
+                document=doc,
+                chunk_index=i,
+                text=chunk
+            )
+        )
+
+        embeddings.append(emb)
+        ids.append(f"{doc.id}_{i}")
+
+    # Save chunks in DB
     DocumentChunk.objects.bulk_create(chunk_objs)
 
+    if not embeddings:
+        return Response(
+            {'error': 'Embedding generation failed'},
+            status=500
+        )
+
+    # -------------------------
+    # VECTOR DB (CHROMA)
+    # -------------------------
     collection = reset_collection(doc.id)
     collection.add(
         ids=ids,
-        documents=chunks,
+        documents=chunks[:len(embeddings)],
         embeddings=embeddings,
-        metadatas=[{'doc_id': doc.id, 'chunk_index': i} for i in range(len(chunks))]
+        metadatas=[
+            {'doc_id': doc.id, 'chunk_index': i}
+            for i in range(len(embeddings))
+        ]
     )
 
-    return Response({'id': doc.id, 'title': doc.title, 'chunks': len(chunks), 'status': 'uploaded_indexed'})
+    return Response({
+        'id': doc.id,
+        'title': doc.title,
+        'chunks': len(embeddings),
+        'status': 'uploaded_indexed'
+    })
 
+
+# -------------------------
+# CHAT WITH DOCUMENT
+# -------------------------
 @api_view(['POST'])
 def chat_with_document(request, doc_id):
     doc = get_object_or_404(Document, id=doc_id)
@@ -79,7 +162,12 @@ def chat_with_document(request, doc_id):
     if not message:
         return Response({'error': 'message required'}, status=400)
 
+    # Query embedding (SAFE)
     query_embedding = get_embedding(message)
+
+    if not query_embedding:
+        return Response({'error': 'Query embedding failed'}, status=500)
+
     collection = get_collection(doc.id)
 
     results = collection.query(
@@ -88,19 +176,20 @@ def chat_with_document(request, doc_id):
         include=['documents', 'metadatas']
     )
 
-    contexts = results['documents'][0] if results.get('documents') else []
+    contexts = results.get('documents', [[]])[0]
     context_text = "\n\n".join(contexts)
 
     prompt = f"""
-		You are a helpful assistant. Answer only from the document context.
-		If the answer is not present, say you don't know.
+You are a helpful assistant.
+Answer ONLY from the document context.
+If not present, say "I don't know".
 
-		Document context:
-		{context_text}
+Context:
+{context_text}
 
-		User question:
-		{message}
-	"""
+Question:
+{message}
+"""
 
     response = ollama.chat(
         model='llama3.1',
@@ -111,3 +200,22 @@ def chat_with_document(request, doc_id):
         'reply': response['message']['content'],
         'matched_chunks': len(contexts)
     })
+
+
+# -------------------------
+# DELETE DOCUMENT
+# -------------------------
+def delete_document(request, id):
+    doc = get_object_or_404(Document, id=id)
+
+    if request.method == "POST":
+        # delete file from storage
+        if doc.file:
+            doc.file.delete()
+
+        # delete DB record
+        doc.delete()
+
+        return redirect('dashboard')
+
+    return redirect('dashboard')
