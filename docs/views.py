@@ -29,7 +29,7 @@ def upload_document(request):
 
     if not title or not file:
         return Response({'error': 'title and file required'}, status=status.HTTP_400_BAD_REQUEST)
-
+    print("pppppppppp", file , title)
     doc = Document.objects.create(title=title, file=file)
 
     ext = Path(doc.file.path).suffix.lower()
@@ -43,7 +43,7 @@ def upload_document(request):
     text = ''
     if html_path and html_path.exists():
         text = extract_text_from_html(html_path)
-
+    print("pppp", text)
     doc.extracted_text = text
     doc.save()
 
@@ -92,15 +92,15 @@ def chat_with_document(request, doc_id):
     context_text = "\n\n".join(contexts)
 
     prompt = f"""
-You are a helpful assistant. Answer only from the document context.
-If the answer is not present, say you don't know.
+		You are a helpful assistant. Answer only from the document context.
+		If the answer is not present, say you don't know.
 
-Document context:
-{context_text}
+		Document context:
+		{context_text}
 
-User question:
-{message}
-"""
+		User question:
+		{message}
+	"""
 
     response = ollama.chat(
         model='llama3.1',
