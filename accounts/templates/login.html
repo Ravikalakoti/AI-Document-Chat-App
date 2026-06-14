@@ -1,0 +1,132 @@
+{% extends 'docs/base.html' %}
+
+{% block content %}
+
+<style>
+.login-wrapper{
+    min-height:85vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.login-card{
+    width:100%;
+    max-width:450px;
+    border:none;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 15px 40px rgba(0,0,0,.12);
+}
+
+.login-header{
+    background:linear-gradient(135deg,#0d6efd,#4f8cff);
+    color:white;
+    text-align:center;
+    padding:30px;
+}
+
+.login-header h2{
+    margin:0;
+    font-weight:700;
+}
+
+.login-header p{
+    margin-top:8px;
+    opacity:.9;
+}
+
+.login-body{
+    padding:30px;
+}
+
+.login-body input{
+    border-radius:12px !important;
+    padding:12px;
+}
+
+.login-btn{
+    width:100%;
+    border-radius:12px;
+    padding:12px;
+    font-weight:600;
+}
+
+.signup-link{
+    text-align:center;
+    margin-top:20px;
+}
+
+.signup-link a{
+    text-decoration:none;
+    font-weight:600;
+}
+
+.logo-circle{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:white;
+    color:#0d6efd;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    margin:0 auto 15px;
+}
+</style>
+
+<div class="login-wrapper">
+
+
+<div class="card login-card">
+
+    <div class="login-header">
+
+        <div class="logo-circle">
+            🤖
+        </div>
+
+        <h2>AI Doc Chat</h2>
+
+        <p>
+            Login to access your documents
+        </p>
+
+    </div>
+
+    <div class="login-body">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button
+                type="submit"
+                class="btn btn-primary login-btn">
+
+                Sign In
+
+            </button>
+
+        </form>
+
+        <div class="signup-link">
+
+            New user?
+
+            <a href="{% url 'signup' %}">
+                Create Account
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

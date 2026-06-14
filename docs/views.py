@@ -17,11 +17,13 @@ from .utils import (
 from .vector_store import reset_collection, get_collection
 from .embeddings import get_embedding
 import ollama
+from django.contrib.auth.decorators import login_required
 
 
 # -------------------------
 # DASHBOARD
 # -------------------------
+@login_required
 def dashboard(request):
     docs = Document.objects.order_by('-created_at')
     return render(request, 'docs/dashboard.html', {'docs': docs})
@@ -37,6 +39,7 @@ def upload_page(request):
 # -------------------------
 # DOCUMENT DETAIL
 # -------------------------
+@login_required
 def document_detail(request, doc_id):
     doc = get_object_or_404(Document, id=doc_id)
     chunks = doc.chunks.all().order_by('chunk_index')
@@ -205,6 +208,7 @@ Question:
 # -------------------------
 # DELETE DOCUMENT
 # -------------------------
+@login_required
 def delete_document(request, id):
     doc = get_object_or_404(Document, id=id)
 
