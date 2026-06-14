@@ -1,0 +1,657 @@
+{% extends 'docs/base.html' %}
+{% block title %}Home - Document AI by Ravi Singh Kalakoti{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Premium gradient background with animation */
+  .home-bg {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    min-height: 100vh;
+    padding: 0;
+    position: relative;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Floating particles */
+  .particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .particle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: float 20s infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+  }
+
+  /* Hero section */
+  .hero-section {
+    padding: 8rem 0 5rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+  }
+
+  .hero-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    letter-spacing: -2px;
+    line-height: 1.1;
+  }
+
+  .hero-title span {
+    color: #ffd700;
+    background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
+    padding: 0 0.5rem;
+    border-radius: 10px;
+  }
+
+  .hero-subtitle {
+    font-size: 1.6rem;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .creator-name {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+
+  .creator-name i {
+    color: #ff6b6b;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 3rem;
+  }
+
+  .btn-hero-primary {
+    background: white;
+    color: #0f0c29;
+    padding: 1.3rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .btn-hero-primary:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .btn-hero-secondary {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 1.3rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    border: 2px solid rgba(255,255,255,0.3);
+    transition: all 0.4s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-hero-secondary:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-5px);
+    border-color: white;
+  }
+
+  /* Plans section */
+  .plans-section {
+    padding: 5rem 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .plans-title {
+    text-align: center;
+    color: white;
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .plans-subtitle {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 1.2rem;
+    margin-bottom: 4rem;
+  }
+
+  /* Premium plan cards - Stripe/Notion style */
+  .plan-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+  }
+
+  .plan-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  }
+
+  .plan-card.premium {
+    background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,240,240,0.98) 100%);
+    border: 2px solid #ffd700;
+  }
+
+  .plan-card.premium::before {
+    background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%);
+    height: 7px;
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
+    color: white;
+    padding: 0.7rem 1.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 0 24px 0 24px;
+    box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+    animation: badgePulse 2s infinite;
+  }
+
+  @keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .plan-header {
+    padding: 3rem 2.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(240,240,250,0.5) 100%);
+  }
+
+  .plan-name {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+  }
+
+  .plan-name.free {
+    color: #667eea;
+  }
+
+  .plan-name.premium {
+    color: #ff6b6b;
+  }
+
+  .plan-price {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 0.3rem;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .plan-price.free {
+    color: #667eea;
+  }
+
+  .plan-price.premium {
+    color: #ff6b6b;
+  }
+
+  .plan-price-sub {
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .plan-features {
+    padding: 2.5rem;
+  }
+
+  .plan-feature {
+    padding: 1rem 0;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s;
+  }
+
+  .plan-feature:hover {
+    transform: translateX(5px);
+  }
+
+  .plan-feature i {
+    color: #00b894;
+    font-size: 1.4rem;
+    width: 30px;
+    text-align: center;
+  }
+
+  .plan-feature.disabled {
+    color: #adb5bd;
+  }
+
+  .plan-feature.disabled i {
+    color: #adb5bd;
+  }
+
+  .plan-feature strong {
+    color: #2d3748;
+  }
+
+  .plan-btn {
+    padding: 1.5rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin: 0 2.5rem 2.5rem;
+    display: block;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .plan-btn.free {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+  }
+
+  .plan-btn.premium {
+    background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
+    color: white;
+    box-shadow: 0 15px 50px rgba(255, 107, 107, 0.5);
+    animation: premiumGlow 3s infinite;
+  }
+
+  @keyframes premiumGlow {
+    0%, 100% { box-shadow: 0 15px 50px rgba(255, 107, 107, 0.5); }
+    50% { box-shadow: 0 15px 70px rgba(255, 107, 107, 0.8); }
+  }
+
+  .plan-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+  }
+
+  /* Features section */
+  .features-section {
+    padding: 5rem 0 7rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .features-title {
+    text-align: center;
+    color: white;
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .features-subtitle {
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+    font-size: 1.2rem;
+    margin-bottom: 4rem;
+  }
+
+  .feature-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+  }
+
+  .feature-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .feature-icon {
+    font-size: 3.5rem;
+    color: #667eea;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  }
+
+  .feature-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.8rem;
+  }
+
+  .feature-desc {
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  .footer-credit {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    padding: 2rem 0;
+    font-size: 0.9rem;
+    position: relative;
+    z-index: 2;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-bg">
+  
+  <!-- Floating Particles -->
+  <div class="particles">
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 2.5s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 4.5s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 1.5s;"></div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-badge">
+        <i class="bi bi-star-fill"></i> AI-Powered Document Intelligence
+      </div>
+      
+      <h1 class="hero-title">
+        Document <span>AI</span>
+      </h1>
+      
+      <p class="hero-subtitle">
+        Chat with your documents using advanced AI. Ask questions, get instant answers, and unlock insights from your PDFs.
+      </p>
+      
+      <div class="creator-name">
+        <i class="bi bi-heart-fill"></i> Created by <strong>Ravi Singh Kalakoti</strong>
+      </div>
+      
+      <div class="hero-buttons">
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}" class="btn-hero-primary">
+            <i class="bi bi-dashboard"></i> Go to Dashboard
+          </a>
+        {% else %}
+          <a href="{% url 'signup' %}" class="btn-hero-primary">
+            <i class="bi bi-person-plus"></i> Get Started Free
+          </a>
+          <a href="{% url 'login' %}" class="btn-hero-secondary">
+            <i class="bi bi-person"></i> Login
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Plans Section -->
+  <div class="plans-section">
+    <div class="container">
+      <h2 class="plans-title">
+        Choose Your Plan
+      </h2>
+      <p class="plans-subtitle">
+        Start free, upgrade when you need more power
+      </p>
+      
+      <div class="row">
+        <!-- Free Plan -->
+        <div class="col-md-6 mb-4">
+          <div class="plan-card">
+            <div class="plan-header">
+              <h3 class="plan-name free">
+                <i class="bi bi-free"></i> Free
+              </h3>
+              <div class="plan-price free">₹0</div>
+              <div class="plan-price-sub">Forever free • No credit card</div>
+            </div>
+            
+            <div class="plan-features">
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ free_limit }} Queries Limit
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                Up to 5 Documents
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                Basic Analytics
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                Standard Support
+              </div>
+              <div class="plan-feature disabled">
+                <i class="bi bi-x-circle-fill"></i>
+                Unlimited Queries
+              </div>
+              <div class="plan-feature disabled">
+                <i class="bi bi-x-circle-fill"></i>
+                Advanced Analytics
+              </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+              <a href="{% url 'dashboard' %}" class="plan-btn free">
+                <i class="bi bi-arrow-right"></i> Use Free Plan
+              </a>
+            {% else %}
+              <a href="{% url 'signup' %}" class="plan-btn free">
+                <i class="bi bi-person-plus"></i> Sign Up Free
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Premium Plan -->
+        <div class="col-md-6 mb-4">
+          <div class="plan-card premium">
+            <div class="plan-badge">
+              <i class="bi bi-star-fill"></i> BEST VALUE
+            </div>
+            <div class="plan-header">
+              <h3 class="plan-name premium">
+                <i class="bi bi-star"></i> Premium
+              </h3>
+              <div class="plan-price premium">{{ premium_price }}</div>
+              <div class="plan-price-sub">Per month • Cancel anytime</div>
+            </div>
+            
+            <div class="plan-features">
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <strong>Unlimited Queries</strong>
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <strong>Unlimited Documents</strong>
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                Advanced Analytics
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                Priority Support
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                AI-Powered Insights
+              </div>
+              <div class="plan-feature">
+                <i class="bi bi-check-circle-fill"></i>
+                No Restrictions
+              </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+              <a href="{% url 'subscription_plan' %}" class="plan-btn premium">
+                <i class="bi bi-star-fill"></i> Upgrade to Premium
+              </a>
+            {% else %}
+              <a href="{% url 'signup' %}" class="plan-btn premium">
+                <i class="bi bi-star-fill"></i> Sign Up & Upgrade
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Features Section -->
+  <div class="features-section">
+    <div class="container">
+      <h2 class="features-title">
+        Why Choose Document AI?
+      </h2>
+      <p class="features-subtitle">
+        Built with cutting-edge technology for maximum productivity
+      </p>
+      
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-chat-dots"></i>
+            </div>
+            <h5 class="feature-name">Chat with Documents</h5>
+            <p class="feature-desc">
+              Ask questions about your PDFs, docs, and get instant AI answers powered by state-of-the-art language models
+            </p>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-graph-up"></i>
+            </div>
+            <h5 class="feature-name">Track Usage</h5>
+            <p class="feature-desc">
+              Monitor queries, analyze patterns, and understand document usage with beautiful analytics dashboards
+            </p>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="bi bi-shield-lock"></i>
+            </div>
+            <h5 class="feature-name">Secure & Private</h5>
+            <p class="feature-desc">
+              Your documents are encrypted, secure, and private. Only accessible by you with enterprise-grade security
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer Credit -->
+  <div class="footer-credit">
+    <p>
+      <i class="bi bi-heart-fill"></i> Made with ❤️ by <strong>Ravi Singh Kalakoti</strong>
+    </p>
+    <p style="margin-top: 0.5rem; opacity: 0.7;">
+      © 2026 Document AI. All rights reserved.
+    </p>
+  </div>
+  
+</div>
+{% endblock %}

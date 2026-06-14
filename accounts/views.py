@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.http import JsonResponse
+from .models import Subscription
 
 from .forms import SignupForm
 
@@ -61,3 +63,14 @@ def logout_view(request):
     logout(request)
 
     return redirect('login')
+
+def user_profile_api(request):
+    sub = Subscription.objects.get(user=request.user)
+
+    return JsonResponse({
+        "username": request.user.username,
+        "is_subscribed": sub.is_active(),
+        "plan": sub.plan_name,
+        "subscribed_at": sub.subscribed_at,
+        "expires_at": sub.expires_at,
+    })

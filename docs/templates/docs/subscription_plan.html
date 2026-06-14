@@ -1,0 +1,274 @@
+{% extends 'docs/base.html' %}
+{% block title %}Subscription Plan{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =========================
+   BACKGROUND
+========================= */
+.subscription-bg {
+  min-height: 100vh;
+  padding: 4rem 0;
+  background: radial-gradient(circle at top, #1a1a2e, #16213e, #0f3460);
+  position: relative;
+  overflow: hidden;
+}
+
+/* floating glow blobs */
+.subscription-bg::before,
+.subscription-bg::after {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.subscription-bg::before {
+  background: #ff6b6b;
+  top: -100px;
+  left: -100px;
+}
+
+.subscription-bg::after {
+  background: #667eea;
+  bottom: -120px;
+  right: -120px;
+}
+
+/* =========================
+   HEADER
+========================= */
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 2;
+}
+
+.page-title {
+  color: white;
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.page-subtitle {
+  color: rgba(255,255,255,0.7);
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+/* usage badge */
+.usage-badge {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+}
+
+/* =========================
+   PLAN CARD (GLASS STYLE)
+========================= */
+.plan-card {
+  background: rgba(255,255,255,0.95);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-8px);
+}
+
+/* =========================
+   PRICE
+========================= */
+.plan-price {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #ff6b6b;
+  letter-spacing: -2px;
+}
+
+.plan-price small {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+/* =========================
+   FEATURES
+========================= */
+.features {
+  margin-top: 2rem;
+}
+
+.feature {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  padding: 12px 0;
+  font-size: 1.05rem;
+}
+
+.feature i {
+  color: #00b894;
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+
+/* =========================
+   BUTTON
+========================= */
+.subscribe-btn {
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  box-shadow: 0 15px 40px rgba(255,107,107,0.4);
+  transition: all 0.3s ease;
+}
+
+.subscribe-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 60px rgba(255,107,107,0.6);
+}
+
+/* =========================
+   SUBSCRIBED STATE
+========================= */
+.success-box {
+  text-align: center;
+  padding: 2rem;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: #00b894;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="subscription-bg">
+
+  <!-- HEADER -->
+  <div class="container page-header">
+    <h1 class="page-title">Upgrade Your Experience</h1>
+    <p class="page-subtitle">
+      Unlock unlimited AI document intelligence
+    </p>
+
+    <div class="usage-badge">
+      📊 You used <b>{{ query_count }}/10</b> free queries
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+
+        <div class="plan-card">
+
+          {% if is_subscribed %}
+
+            <div class="success-box">
+              <div class="success-icon">✔</div>
+              <h2 class="mt-3 text-success fw-bold">You're Premium!</h2>
+              <p class="text-muted">Enjoy unlimited access to your documents</p>
+              <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3 px-4">
+                Go to Dashboard
+              </a>
+            </div>
+
+          {% else %}
+
+            <div class="text-center">
+              <h2 class="fw-bold">Premium Plan</h2>
+
+              <div class="plan-price mt-2">
+                ₹499 <small>/ month</small>
+              </div>
+
+              <p class="text-muted">Demo plan — no payment required</p>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- FEATURES -->
+            <div class="features">
+
+              <div class="feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
+                  <b>Unlimited Documents</b><br>
+                  <small class="text-muted">Upload and manage without limits</small>
+                </div>
+              </div>
+
+              <div class="feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
+                  <b>Unlimited AI Queries</b><br>
+                  <small class="text-muted">No restrictions on chat usage</small>
+                </div>
+              </div>
+
+              <div class="feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
+                  <b>Advanced Analytics</b><br>
+                  <small class="text-muted">Track document & AI usage</small>
+                </div>
+              </div>
+
+              <div class="feature">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>
+                  <b>Priority Support</b><br>
+                  <small class="text-muted">Faster responses & help</small>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- BUTTON -->
+            <a href="{% url 'subscribe' %}">
+              <button class="subscribe-btn">
+                🚀 Subscribe Now (Demo)
+              </button>
+            </a>
+
+            <p class="text-center text-muted mt-3" style="font-size: 0.9rem;">
+              No payment required • Instant activation
+            </p>
+
+          {% endif %}
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

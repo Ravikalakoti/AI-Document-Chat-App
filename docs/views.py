@@ -5,8 +5,10 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
 
 from .models import Document, DocumentChunk, DocumentQuery
+from accounts.models import Subscription
 from .utils import (
     convert_document_to_html,
     extract_text_from_html,
@@ -22,16 +24,55 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 from django.db.models import Count
 
+def home(request):
+    if request.user.is_authenticated:
+        # If authenticated, redirect to dashboard
+        return redirect('dashboard')
+    
+    # Free tier info
+    free_limit = 10
+    free_features = [
+        "Up to 10 queries",
+        "Upload up to 5 documents",
+        "Basic analytics",
+        "Standard support"
+    ]
+    
+    # Premium tier info
+    premium_price = "₹499/month"
+    premium_features = [
+        "Unlimited queries",
+        "Unlimited document upload",
+        "Advanced analytics",
+        "Priority support",
+        "AI-powered insights"
+    ]
+    
+    return render(request, 'docs/home.html', {
+        'free_limit': free_limit,
+        'free_features': free_features,
+        'premium_price': premium_price,
+        'premium_features': premium_features,
+    })
 
 # -------------------------
 # DASHBOARD
 # -------------------------
 @login_required
 def dashboard(request):
-    docs = Document.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
-    return render(request, 'docs/dashboard.html', {'docs': docs})
+    user = request.user
+    
+    docs = Document.objects.filter(user=user)
+    query_count = DocumentQuery.objects.filter(user=user).count()
+    
+    subscription = Subscription.objects.filter(user=user).first()
+    is_subscribed = subscription and subscription.is_subscribed
+    
+    return render(request, 'docs/dashboard.html', {
+        'docs': docs,
+        'query_count': query_count,
+        'is_subscribed': is_subscribed,
+    })
 
 
 # -------------------------
@@ -173,60 +214,91 @@ def upload_document(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_with_document(request, doc_id):
-    doc = get_object_or_404(
-        Document,
-        id=doc_id,
-        user=request.user
-    )
-    message = request.data.get('message', '').strip()
+    user = request.user
+    name = user.first_name if user.first_name else user.username
+    try:
+        # Check subscription
+        subscription = Subscription.objects.filter(user=request.user).first()
+        is_subscribed = subscription and subscription.is_subscribed
+        
+        if not is_subscribed:
+            query_count = DocumentQuery.objects.filter(user=request.user).count()
+            if query_count >= 10:
+                return Response({
+                    'error': 'limit_exceeded',
+                    'message': 'You have reached your 10 query limit. Subscribe for unlimited access.',
+                    'query_count': query_count,
+                    'limit': 10
+                }, status=403)
+        
+        doc = get_object_or_404(Document, id=doc_id, user=request.user)
+        message = request.data.get('message', '').strip()
+        
+        if not message:
+            return Response({'error': 'message required'}, status=400)
+        
+        query_embedding = get_embedding(message)
+        if not query_embedding:
+            return Response({'error': 'Query embedding failed'}, status=500)
+        
+        collection = get_collection(doc.id)
+        results = collection.query(
+            query_embeddings=[query_embedding],
+            n_results=5,
+            include=['documents', 'metadatas']
+        )
+        
+        contexts = results.get('documents', [[]])[0]
+        context_text = "\n\n".join(contexts)
+        
+        prompt = f"""
+            You are a helpful AI assistant.
 
-    DocumentQuery.objects.create(
-        user=request.user,
-        document=doc,
-        question=message
-    )
+            User profile:
+            - Name: {name}
 
-    if not message:
-        return Response({'error': 'message required'}, status=400)
+            Behavior rules:
+            - Use user's name occasionally in replies (not every sentence)
+            - Be natural, not repetitive
+            - Answer only from the document context
+            - If information is missing, say "I don't know"
 
-    # Query embedding (SAFE)
-    query_embedding = get_embedding(message)
+            Context:
+            {context_text}
 
-    if not query_embedding:
-        return Response({'error': 'Query embedding failed'}, status=500)
+            User question:
+            {message}
+        """
+        from ollama import Client
+        client = Client(host='http://localhost:11434')
+        response = client.chat(
+            model='llama3.1',
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        
+        reply_content = response['message']['content']
+        
+        # Save query to database
+        DocumentQuery.objects.create(
+            user=request.user,
+            document=doc,
+            question=message
+        )
+        
+        query_count = DocumentQuery.objects.filter(user=request.user).count()
+        
+        return Response({
+            'reply': reply_content,
+            'matched_chunks': len(contexts),
+            'query_count': query_count,
+            'limit': 10,
+            'is_subscribed': is_subscribed
+        })
+    
+    except Exception as e:
+        print("chat_with_document error:", e)
+        return Response({'error': 'Internal server error'}, status=500)
 
-    collection = get_collection(doc.id)
-
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=5,
-        include=['documents', 'metadatas']
-    )
-
-    contexts = results.get('documents', [[]])[0]
-    context_text = "\n\n".join(contexts)
-
-    prompt = f"""
-        You are a helpful assistant.
-        Answer ONLY from the document context.
-        If not present, say "I don't know".
-
-        Context:
-        {context_text}
-
-        Question:
-        {message}
-    """
-
-    response = ollama.chat(
-        model='llama3.1',
-        messages=[{'role': 'user', 'content': prompt}]
-    )
-
-    return Response({
-        'reply': response['message']['content'],
-        'matched_chunks': len(contexts)
-    })
 
 # -------------------------
 # DELETE DOCUMENT
@@ -308,3 +380,33 @@ def document_analytics(request, doc_id):
         "top_questions": top_questions,
         "doc_id": doc.id,
     })
+
+@login_required
+def subscription_plan(request):
+    user = request.user
+    query_count = DocumentQuery.objects.filter(user=user).count()
+    
+    subscription = Subscription.objects.filter(user=user).first()
+    is_subscribed = subscription and subscription.is_subscribed
+    
+    return render(request, 'docs/subscription_plan.html', {
+        'query_count': query_count,
+        'is_subscribed': is_subscribed,
+    })
+
+@login_required
+def subscribe(request):
+    user = request.user
+    
+    # Create or update subscription (DUMMY - no payment)
+    subscription = Subscription.objects.filter(user=user).first()
+    if not subscription:
+        subscription = Subscription(user=user)
+    
+    subscription.is_subscribed = True
+    subscription.subscribed_at = timezone.now()
+    subscription.expires_at = timezone.now() + timedelta(days=30)
+    subscription.plan_name = "Premium"
+    subscription.save()
+    
+    return redirect('dashboard')
