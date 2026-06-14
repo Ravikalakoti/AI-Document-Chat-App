@@ -4,325 +4,306 @@
 {% block content %}
 
 <style>
-.chat-card{
-    height:85vh;
+/* =========================
+   LEFT PANEL (DOCUMENT)
+========================= */
+.doc-card iframe {
+    border-radius: 10px;
 }
 
-.chat-body{
-    display:flex;
-    flex-direction:column;
-    height:100%;
+/* =========================
+   CHAT CARD
+========================= */
+.chat-card {
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.chat-box{
-    flex:1;
-    overflow-y:auto;
-    padding:16px;
-    background:#f8fafc;
-    border-radius:12px;
-    border:1px solid #e5e7eb;
+.chat-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-.message{
-    display:flex;
-    margin-bottom:15px;
+/* CHAT BOX */
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    scroll-behavior: smooth;
 }
 
-.message.user{
-    justify-content:flex-end;
+/* MESSAGE ROW */
+.message {
+    display: flex;
+    margin-bottom: 12px;
 }
 
-.message.ai{
-    justify-content:flex-start;
+/* USER RIGHT */
+.message.user {
+    justify-content: flex-end;
 }
 
-.bubble{
-    max-width:85%;
-    padding:12px 16px;
-    border-radius:18px;
-    word-break:break-word;
+/* AI LEFT */
+.message.ai {
+    justify-content: flex-start;
 }
 
-.user .bubble{
-    background:#0d6efd;
-    color:#fff;
-    border-bottom-right-radius:6px;
+/* BUBBLES */
+.bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
 }
 
-.ai .bubble{
-    background:#fff;
-    border:1px solid #dee2e6;
-    border-bottom-left-radius:6px;
+/* USER STYLE */
+.user .bubble {
+    background: #0d6efd;
+    color: #fff;
+    border-bottom-right-radius: 6px;
 }
 
-.typing-indicator{
-    display:flex;
-    gap:5px;
-    padding:5px;
+/* AI STYLE */
+.ai .bubble {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-bottom-left-radius: 6px;
 }
 
-.typing-indicator span{
-    width:8px;
-    height:8px;
-    background:#6c757d;
-    border-radius:50%;
-    animation:bounce 1.4s infinite;
+/* INPUT AREA FIXED */
+.chat-input {
+    margin-top: 10px;
 }
 
-.typing-indicator span:nth-child(2){
-    animation-delay:.2s;
+/* CHUNKS */
+.chunk-box {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 10px;
+    border-radius: 10px;
 }
 
-.typing-indicator span:nth-child(3){
-    animation-delay:.4s;
+/* TYPING DOTS */
+.typing {
+    display: flex;
+    gap: 5px;
 }
 
-@keyframes bounce{
-    0%,80%,100%{
-        transform:translateY(0);
-        opacity:.5;
-    }
-    40%{
-        transform:translateY(-6px);
-        opacity:1;
-    }
+.typing span {
+    width: 6px;
+    height: 6px;
+    background: #888;
+    border-radius: 50%;
+    animation: bounce 1.3s infinite;
 }
 
-.chat-input{
-    margin-top:15px;
-}
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
 
-.chunk-box{
-    border:1px solid #e5e7eb;
-    border-radius:10px;
-    padding:10px;
-    background:#fff;
-}
-
-@media(max-width:768px){
-    .chat-card{
-        height:70vh;
-    }
-
-    iframe{
-        height:400px !important;
-    }
+@keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
 }
 </style>
 
 <div class="row g-4">
 
-    <!-- Document Section -->
-    <div class="col-lg-7">
+  <!-- ================= LEFT: DOCUMENT ================= -->
+  <div class="col-lg-7">
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">{{ doc.title }}</h5>
-            </div>
+    <div class="card shadow-sm mb-4 doc-card">
+      <div class="card-header">
+        <h5 class="mb-0">{{ doc.title }}</h5>
+      </div>
 
-            <div class="card-body">
-
-                {% if doc.file %}
-                    <iframe
-                        src="{{ doc.file.url }}"
-                        width="100%"
-                        height="600"
-                        style="border:none;">
-                    </iframe>
-                {% else %}
-                    <div class="alert alert-warning">
-                        Preview not available.
-                    </div>
-                {% endif %}
-
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0">Extracted Chunks</h5>
-            </div>
-
-            <div class="card-body">
-
-                {% for chunk in chunks %}
-                    <div class="chunk-box mb-2">
-                        <small class="text-muted">
-                            Chunk {{ chunk.chunk_index }}
-                        </small>
-
-                        <div class="mt-1">
-                            {{ chunk.text }}
-                        </div>
-                    </div>
-                {% empty %}
-                    <p>No chunks available.</p>
-                {% endfor %}
-
-            </div>
-        </div>
-
+      <div class="card-body p-0">
+        {% if doc.file %}
+          <iframe src="{{ doc.file.url }}" width="100%" height="600px"></iframe>
+        {% else %}
+          <div class="p-3 alert alert-warning mb-0">
+            Preview not available for this file.
+          </div>
+        {% endif %}
+      </div>
     </div>
 
-    <!-- Chat Section -->
-    <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h5 class="mb-0">Extracted Chunks</h5>
+      </div>
 
-        <div class="card shadow-sm chat-card">
+      <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+        {% for chunk in chunks %}
+          <div class="chunk-box mb-2">
+            <small class="text-muted">Chunk {{ chunk.chunk_index }}</small>
+            <div class="mt-1">{{ chunk.text }}</div>
+          </div>
+        {% empty %}
+          <p class="mb-0 text-muted">No chunks available.</p>
+        {% endfor %}
+      </div>
+    </div>
 
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">🤖 Chat With Document</h5>
+  </div>
+
+  <!-- ================= RIGHT: CHAT ================= -->
+  <div class="col-lg-5">
+
+    <div class="card shadow-sm chat-card">
+
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">🤖 Chat with Document</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="toggleDarkMode()">
+        🌙 Night Mode
+        </button>
+      </div>
+
+      <div class="card-body chat-body">
+
+        <!-- CHAT BOX -->
+        <div id="chatBox" class="chat-box">
+
+          <div class="message ai">
+            <div class="bubble">
+              👋 Hi! Ask anything about this document.
             </div>
-
-            <div class="card-body chat-body">
-
-                <div id="chatBox" class="chat-box">
-
-                    <div class="message ai">
-                        <div class="bubble">
-                            Hi 👋 Ask me anything about this document.
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="input-group chat-input">
-                    <input
-                        type="text"
-                        id="chatInput"
-                        class="form-control"
-                        placeholder="Ask a question...">
-
-                    <button
-                        id="sendBtn"
-                        class="btn btn-primary">
-                        Send
-                    </button>
-                </div>
-
-            </div>
+          </div>
 
         </div>
 
+        <!-- INPUT -->
+        <div class="input-group chat-input">
+          <input type="text" id="chatInput" class="form-control"
+                 placeholder="Ask a question...">
+
+          <button class="btn btn-primary" onclick="sendChat({{ doc.id }})">
+            Send
+          </button>
+        </div>
+
+      </div>
     </div>
+
+  </div>
 
 </div>
 
 <script>
-
 const chatBox = document.getElementById("chatBox");
 const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
 
 function scrollBottom() {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function addMessage(text, sender) {
-
-    const wrapper = document.createElement("div");
-    wrapper.className = `message ${sender}`;
-
-    wrapper.innerHTML = `
-        <div class="bubble">${text}</div>
-    `;
-
-    chatBox.appendChild(wrapper);
+    const div = document.createElement("div");
+    div.className = `message ${sender}`;
+    div.innerHTML = `<div class="bubble">${text}</div>`;
+    chatBox.appendChild(div);
     scrollBottom();
 }
 
+/* 👉 SHOW TYPING */
 function showTyping() {
+    const typing = document.createElement("div");
+    typing.className = "message ai";
+    typing.id = "typingBox";
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "message ai";
-    wrapper.id = "typingIndicator";
-
-    wrapper.innerHTML = `
+    typing.innerHTML = `
         <div class="bubble">
-            <div class="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="typing">
+                <span></span><span></span><span></span>
             </div>
         </div>
     `;
 
-    chatBox.appendChild(wrapper);
+    chatBox.appendChild(typing);
     scrollBottom();
 }
 
+/* 👉 HIDE TYPING */
 function hideTyping() {
-    const el = document.getElementById("typingIndicator");
-    if(el) el.remove();
+    const el = document.getElementById("typingBox");
+    if (el) el.remove();
 }
 
+/* 👉 MAIN CHAT FUNCTION */
 async function sendChat(docId) {
 
-    const question = chatInput.value.trim();
+    const message = chatInput.value.trim();
+    if (!message) return;
 
-    if(!question){
-        return;
-    }
-
-    addMessage(question, "user");
-
+    addMessage(message, "user");
     chatInput.value = "";
-    chatInput.disabled = true;
-    sendBtn.disabled = true;
 
+    // 🔥 show loading
     showTyping();
 
     try {
-
-        const response = await fetch(`/documents/${docId}/chat/`, {
+        const res = await fetch(`/api/chat/${docId}/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
+                "X-CSRFToken": getCookie("csrftoken")
             },
-            body: JSON.stringify({
-                question: question
-            })
+            body: JSON.stringify({ message })
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
+        // 🔥 remove loading
         hideTyping();
 
-        addMessage(
-            data.answer || "No response received.",
-            "ai"
-        );
+        addMessage(data.reply || "No response", "ai");
 
-    }
-    catch(error){
-
+    } catch (err) {
         hideTyping();
-
-        addMessage(
-            "Something went wrong. Please try again.",
-            "ai"
-        );
-
-        console.error(error);
+        addMessage("Something went wrong", "ai");
     }
-
-    chatInput.disabled = false;
-    sendBtn.disabled = false;
-    chatInput.focus();
 }
 
-sendBtn.addEventListener("click", () => {
-    sendChat({{ doc.id }});
-});
+/* CSRF helper */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const c = cookies[i].trim();
+            if (c.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
-chatInput.addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        sendChat({{ doc.id }});
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+
+    // save preference
+    if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+}
+
+/* load theme on refresh */
+window.addEventListener("load", () => {
+    const theme = localStorage.getItem("theme");
+    if (theme === "dark") {
+        document.body.classList.add("dark-mode");
     }
 });
-
-scrollBottom();
-
 </script>
 
 {% endblock %}

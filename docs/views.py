@@ -6,11 +6,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Document, DocumentChunk
+from .models import Document, DocumentChunk, DocumentQuery
 from .utils import (
     convert_document_to_html,
     extract_text_from_html,
-    extract_text_from_file,   # 🔥 FIX ADDED (IMPORTANT)
+    extract_text_from_file,
     chunk_text
 )
 
@@ -20,6 +20,7 @@ import ollama
 from django.contrib.auth.decorators import login_required
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from django.db.models import Count
 
 
 # -------------------------
@@ -169,10 +170,8 @@ def upload_document(request):
     })
 
 
-# -------------------------
-# CHAT WITH DOCUMENT
-# -------------------------
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def chat_with_document(request, doc_id):
     doc = get_object_or_404(
         Document,
@@ -180,6 +179,12 @@ def chat_with_document(request, doc_id):
         user=request.user
     )
     message = request.data.get('message', '').strip()
+
+    DocumentQuery.objects.create(
+        user=request.user,
+        document=doc,
+        question=message
+    )
 
     if not message:
         return Response({'error': 'message required'}, status=400)
@@ -202,16 +207,16 @@ def chat_with_document(request, doc_id):
     context_text = "\n\n".join(contexts)
 
     prompt = f"""
-You are a helpful assistant.
-Answer ONLY from the document context.
-If not present, say "I don't know".
+        You are a helpful assistant.
+        Answer ONLY from the document context.
+        If not present, say "I don't know".
 
-Context:
-{context_text}
+        Context:
+        {context_text}
 
-Question:
-{message}
-"""
+        Question:
+        {message}
+    """
 
     response = ollama.chat(
         model='llama3.1',
@@ -222,7 +227,6 @@ Question:
         'reply': response['message']['content'],
         'matched_chunks': len(contexts)
     })
-
 
 # -------------------------
 # DELETE DOCUMENT
@@ -246,3 +250,61 @@ def delete_document(request, id):
         return redirect('dashboard')
 
     return redirect('dashboard')
+
+@login_required
+def analytics(request):
+    user = request.user
+
+    docs_uploaded = Document.objects.filter(user=user).count()
+
+    queries = DocumentQuery.objects.filter(user=user)
+
+    total_queries = queries.count()
+
+    # Most asked questions (global)
+    top_questions = (
+        queries.values("question")
+        .annotate(count=Count("id"))
+        .order_by("-count")[:10]
+    )
+
+    # queries per document (global)
+    per_doc = (
+        queries.values("document__title", "document__id")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+
+    return render(request, "docs/analytics.html", {
+        "docs_uploaded": docs_uploaded,
+        "total_queries": total_queries,
+        "top_questions": top_questions,
+        "per_doc": per_doc,
+        "doc_id": None,  # global view
+    })
+
+
+@login_required
+def document_analytics(request, doc_id):
+    user = request.user
+    doc = get_object_or_404(Document, id=doc_id, user=user)
+
+    queries = DocumentQuery.objects.filter(user=user, document=doc)
+
+    total_queries = queries.count()
+
+    # Most asked questions for this document
+    top_questions = (
+        queries.values("question")
+        .annotate(count=Count("id"))
+        .order_by("-count")[:10]
+    )
+
+    # You can also add more metrics here if needed
+
+    return render(request, "docs/document_analytics.html", {
+        "doc": doc,
+        "total_queries": total_queries,
+        "top_questions": top_questions,
+        "doc_id": doc.id,
+    })

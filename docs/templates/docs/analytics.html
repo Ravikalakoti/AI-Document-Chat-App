@@ -1,0 +1,180 @@
+{% extends 'docs/base.html' %}
+{% block title %}Global Analytics{% endblock %}
+
+{% block content %}
+<style>
+  .metric-card {
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+  .metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  .metric-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+  .chart-container {
+    border-radius: 12px;
+    background: #fff;
+    padding: 1rem;
+  }
+</style>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center">
+      <h4 class="mb-0 fw-bold">Global Analytics</h4>
+      <a href="{% url 'upload_page' %}" class="btn btn-success btn-sm">
+        <i class="bi bi-upload"></i> Upload New Document
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Metric Cards -->
+<div class="row mb-4">
+  <div class="col-md-4 mb-3">
+    <div class="card metric-card shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="metric-value text-primary">{{ docs_uploaded }}</div>
+        <div class="metric-label">Documents Uploaded</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <div class="card metric-card shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="metric-value text-success">{{ total_queries }}</div>
+        <div class="metric-label">Total Queries</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-3">
+    <div class="card metric-card shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="metric-value text-info">
+          {% if docs_uploaded > 0 %}
+            {{ total_queries|floatformat:0 }}
+          {% else %}
+            0
+          {% endif %}
+        </div>
+        <div class="metric-label">Avg Queries per Doc</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+  <!-- Top Questions -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm chart-container">
+      <div class="card-body">
+        <h6 class="card-title fw-bold mb-3">Top Questions (All Documents)</h6>
+        {% if top_questions %}
+          <div id="top-questions-chart"></div>
+        {% else %}
+          <p class="text-muted">No queries yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Queries per Document -->
+  <div class="col-md-6 mb-4">
+    <div class="card shadow-sm chart-container">
+      <div class="card-body">
+        <h6 class="card-title fw-bold mb-3">Queries per Document</h6>
+        {% if per_doc %}
+          <div id="per-doc-chart"></div>
+        {% else %}
+          <p class="text-muted">No queries yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if top_questions %}
+<div class="row">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Top 10 Questions</h6>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Question</th>
+                <th class="text-end">Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for q in top_questions %}
+              <tr>
+                <td>{{ q.question }}</td>
+                <td class="text-end">{{ q.count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if top_questions %}
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>
+  const topQuestions = Array.from({{ top_questions|safe }});
+  const questions = topQuestions.map(q => q.question);
+  const counts = topQuestions.map(q => q.count);
+
+  Plotly.newPlot('top-questions-chart', [
+    {
+      type: 'bar',
+      x: counts,
+      y: questions,
+      orientation: 'h',
+      marker: { color: '#0d6efd' }
+    }
+  ], {
+    margin: { l: 120, r: 20, t: 20, b: 40 },
+    showlegend: false
+  });
+</script>
+{% endif %}
+
+{% if per_doc %}
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>
+  const perDoc = Array.from({{ per_doc|safe }});
+  const docs = perDoc.map(d => d.document__title);
+  const counts = perDoc.map(d => d.count);
+
+  Plotly.newPlot('per-doc-chart', [
+    {
+      type: 'bar',
+      x: docs,
+      y: counts,
+      marker: { color: '#198754' }
+    }
+  ], {
+    margin: { l: 20, r: 20, t: 20, b: 80 },
+    showlegend: false
+  });
+</script>
+{% endif %}
+{% endblock %}

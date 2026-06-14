@@ -63,35 +63,53 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-async function sendChat(docId) {
-  const input = document.getElementById("chatInput");
-  const chatBox = document.getElementById("chatBox");
-  const message = input.value.trim();
-  if (!message) return;
-
-  chatBox.innerHTML += `
-    <div class="chat-msg user">
-      <div class="chat-bubble">${message}</div>
-    </div>
-  `;
-
-  input.value = "";
-
-  const res = await fetch(`/api/chat/${docId}/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ message })
-  });
-
-  const data = await res.json();
-
-  chatBox.innerHTML += `
-    <div class="chat-msg bot">
-      <div class="chat-bubble">${data.reply || "No response"}</div>
-    </div>
-  `;
-
-  chatBox.scrollTop = chatBox.scrollHeight;
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
+
+// async function sendChat(docId) {
+//   const input = document.getElementById("chatInput");
+//   const chatBox = document.getElementById("chatBox");
+//   const message = input.value.trim();
+//   if (!message) return;
+
+//   chatBox.innerHTML += `
+//     <div class="chat-msg user">
+//       <div class="chat-bubble">${message}</div>
+//     </div>
+//   `;
+
+//   input.value = "";
+
+//   const res = await fetch(`/api/chat/${docId}/`, {
+//     method: "POST",
+//     credentials: "include",   // 🔥 IMPORTANT
+
+//     headers: {
+//       "Content-Type": "application/json",
+//       "X-CSRFToken": getCookie("csrftoken")   // 🔥 THIS FIXES ERROR
+//     },
+
+//     body: JSON.stringify({ message })
+//   });
+
+//   const data = await res.json();
+//   chatBox.innerHTML += `
+//     <div class="chat-msg bot">
+//       <div class="chat-bubble">${data.reply || "No response"}</div>
+//     </div>
+//   `;
+
+//   chatBox.scrollTop = chatBox.scrollHeight;
+// }

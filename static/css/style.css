@@ -56,3 +56,52 @@
   border-radius: 8px;
   background: #fff;
 }
+
+.typing span {
+    width: 6px;
+    height: 6px;
+    background: #888;
+    border-radius: 50%;
+    animation: bounce 1.3s infinite;
+}
+
+/* =========================
+   DARK MODE
+========================= */
+body.dark-mode {
+    background: #0f172a;
+    color: #e5e7eb;
+}
+
+/* cards */
+body.dark-mode .card {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #1f2937;
+}
+
+/* chat box */
+body.dark-mode .chat-box {
+    background: #0b1220;
+    border-color: #1f2937;
+}
+
+/* user bubble stays same */
+body.dark-mode .ai .bubble {
+    background: #111827;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+}
+
+/* input */
+body.dark-mode .form-control {
+    background: #0b1220;
+    color: #e5e7eb;
+    border: 1px solid #334155;
+}
+
+/* header */
+body.dark-mode .card-header {
+    background: #0b1220 !important;
+    border-bottom: 1px solid #1f2937;
+}

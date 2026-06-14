@@ -1,0 +1,93 @@
+{% extends 'docs/base.html' %}
+{% block title %}Analytics - {{ doc.title }}{% endblock %}
+
+{% block content %}
+<style>
+  .metric-card {
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  }
+  .metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  .metric-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center">
+      <h4 class="mb-0 fw-bold">Analytics: {{ doc.title }}</h4>
+      <div class="d-flex gap-2">
+        <a href="{% url 'analytics' %}" class="btn btn-info btn-sm">
+          <i class="bi bi-chart-bar"></i> Global Analytics
+        </a>
+        <a href="{% url 'document_detail' doc.id %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-eye"></i> Open Document
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Metric Cards -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <div class="card metric-card shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="metric-value text-primary">{{ total_queries }}</div>
+        <div class="metric-label">Total Queries for This Document</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="card metric-card shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="metric-value text-info">{{ doc.id }}</div>
+        <div class="metric-label">Document ID</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h6 class="fw-bold mb-3">Top Questions for This Document</h6>
+
+{% if top_questions %}
+<div class="row">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Question</th>
+                <th class="text-end">Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for q in top_questions %}
+              <tr>
+                <td>{{ q.question }}</td>
+                <td class="text-end">{{ q.count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<p class="text-muted">No queries yet for this document.</p>
+{% endif %}
+
+{% endblock %}

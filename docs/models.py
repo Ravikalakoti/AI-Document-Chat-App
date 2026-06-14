@@ -28,3 +28,12 @@ class DocumentChunk(models.Model):
 
     def __str__(self):
         return f"{self.document.title} - {self.chunk_index}"
+
+
+
+#track user queries
+class DocumentQuery(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    question = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
