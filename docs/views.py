@@ -18,6 +18,8 @@ from .vector_store import reset_collection, get_collection
 from .embeddings import get_embedding
 import ollama
 from django.contrib.auth.decorators import login_required
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 
 # -------------------------
@@ -25,13 +27,16 @@ from django.contrib.auth.decorators import login_required
 # -------------------------
 @login_required
 def dashboard(request):
-    docs = Document.objects.order_by('-created_at')
+    docs = Document.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
     return render(request, 'docs/dashboard.html', {'docs': docs})
 
 
 # -------------------------
 # UPLOAD PAGE
 # -------------------------
+@login_required
 def upload_page(request):
     return render(request, 'docs/upload.html')
 
@@ -41,7 +46,11 @@ def upload_page(request):
 # -------------------------
 @login_required
 def document_detail(request, doc_id):
-    doc = get_object_or_404(Document, id=doc_id)
+    doc = get_object_or_404(
+        Document,
+        id=doc_id,
+        user=request.user
+    )
     chunks = doc.chunks.all().order_by('chunk_index')
     return render(request, 'docs/document_detail.html', {
         'doc': doc,
@@ -52,7 +61,9 @@ def document_detail(request, doc_id):
 # -------------------------
 # UPLOAD + INDEXING (FIXED)
 # -------------------------
+
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def upload_document(request):
     title = request.data.get('title')
     file = request.FILES.get('file')
@@ -66,7 +77,11 @@ def upload_document(request):
     print("UPLOAD:", title, file)
 
     # Save document
-    doc = Document.objects.create(title=title, file=file)
+    doc = Document.objects.create(
+        user=request.user,
+        title=title,
+        file=file
+    )
 
     # -------------------------
     # TEXT EXTRACTION (FIXED)
@@ -159,7 +174,11 @@ def upload_document(request):
 # -------------------------
 @api_view(['POST'])
 def chat_with_document(request, doc_id):
-    doc = get_object_or_404(Document, id=doc_id)
+    doc = get_object_or_404(
+        Document,
+        id=doc_id,
+        user=request.user
+    )
     message = request.data.get('message', '').strip()
 
     if not message:
@@ -210,7 +229,11 @@ Question:
 # -------------------------
 @login_required
 def delete_document(request, id):
-    doc = get_object_or_404(Document, id=id)
+    doc = get_object_or_404(
+        Document,
+        id=id,
+        user=request.user
+    )
 
     if request.method == "POST":
         # delete file from storage
