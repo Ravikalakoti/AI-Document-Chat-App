@@ -137,12 +137,16 @@
       </div>
 
       <div class="card-body p-0">
-        {% if doc.file %}
-          <iframe src="{{ doc.file.url }}" width="100%" height="600px"></iframe>
+        {% if doc.file.url|lower|slice:"-4:" == ".pdf" %}
+            <iframe src="{{ doc.file.url }}" width="100%" height="600"></iframe>
         {% else %}
-          <div class="p-3 alert alert-warning mb-0">
-            Preview not available for this file.
-          </div>
+            <div class="alert alert-info">
+                Preview is not available for this file type.
+                <br><br>
+                <a href="{{ doc.file.url }}" class="btn btn-primary" target="_blank">
+                    Download File
+                </a>
+            </div>
         {% endif %}
       </div>
     </div>
@@ -181,15 +185,7 @@
       <div class="card-body chat-body">
 
         <!-- CHAT BOX -->
-        <div id="chatBox" class="chat-box">
-
-          <div class="message ai">
-            <div class="bubble">
-              👋 Hi! Ask anything about this document.
-            </div>
-          </div>
-
-        </div>
+        <div id="chatBox" class="chat-box"></div>
 
         <!-- INPUT -->
         <div class="input-group chat-input">
@@ -226,6 +222,39 @@ function addMessage(text, sender) {
 
     chatBox.appendChild(div);
     scrollBottom();
+}
+
+async function loadHistory(docId){
+
+    const res = await fetch(`/chat/${docId}/history/`,{
+        headers:{
+            "X-CSRFToken":getCookie("csrftoken")
+        }
+    });
+
+    const chats = await res.json();
+
+    chatBox.innerHTML="";
+
+    if(chats.length===0){
+
+        addMessage(
+            "👋 Hi! Ask anything about this document.",
+            "ai"
+        );
+
+        return;
+    }
+
+    chats.forEach(chat=>{
+
+        addMessage(
+            chat.message,
+            chat.role==="assistant" ? "ai" : "user"
+        );
+
+    });
+
 }
 
 /* 👉 SHOW TYPING */
@@ -333,10 +362,15 @@ function toggleDarkMode() {
 
 /* load theme on refresh */
 window.addEventListener("load", () => {
+
     const theme = localStorage.getItem("theme");
-    if (theme === "dark") {
+
+    if(theme==="dark"){
         document.body.classList.add("dark-mode");
     }
+
+    loadHistory({{ doc.id }});
+
 });
 </script>
 

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 
-from .models import Document, DocumentChunk, DocumentQuery
+from .models import Document, DocumentChunk, DocumentQuery, ChatMessage
 from accounts.models import Subscription
 from .utils import (
     convert_document_to_html,
@@ -94,9 +94,16 @@ def document_detail(request, doc_id):
         user=request.user
     )
     chunks = doc.chunks.all().order_by('chunk_index')
+
+    messages = ChatMessage.objects.filter(
+        user=request.user,
+        document=doc
+    ).order_by("created_at")
+
     return render(request, 'docs/document_detail.html', {
         'doc': doc,
-        'chunks': chunks
+        'chunks': chunks,
+        'messages': messages
     })
 
 
@@ -216,13 +223,15 @@ def upload_document(request):
 def chat_with_document(request, doc_id):
     user = request.user
     name = user.first_name if user.first_name else user.username
+
     try:
         # Check subscription
-        subscription = Subscription.objects.filter(user=request.user).first()
+        subscription = Subscription.objects.filter(user=user).first()
         is_subscribed = subscription and subscription.is_subscribed
-        
+
         if not is_subscribed:
-            query_count = DocumentQuery.objects.filter(user=request.user).count()
+            query_count = DocumentQuery.objects.filter(user=user).count()
+
             if query_count >= 10:
                 return Response({
                     'error': 'limit_exceeded',
@@ -230,63 +239,154 @@ def chat_with_document(request, doc_id):
                     'query_count': query_count,
                     'limit': 10
                 }, status=403)
-        
-        doc = get_object_or_404(Document, id=doc_id, user=request.user)
+
+
+        doc = get_object_or_404(
+            Document,
+            id=doc_id,
+            user=user
+        )
+
         message = request.data.get('message', '').strip()
-        
+
         if not message:
-            return Response({'error': 'message required'}, status=400)
-        
+            return Response({
+                'error': 'message required'
+            }, status=400)
+
+
+        # Save user message
+        ChatMessage.objects.create(
+            user=user,
+            document=doc,
+            role="user",
+            message=message
+        )
+
+
+        # -------- RAG SEARCH --------
+
         query_embedding = get_embedding(message)
+
         if not query_embedding:
-            return Response({'error': 'Query embedding failed'}, status=500)
-        
+            return Response({
+                'error': 'Query embedding failed'
+            }, status=500)
+
+
         collection = get_collection(doc.id)
+
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=5,
             include=['documents', 'metadatas']
         )
-        
+
+
         contexts = results.get('documents', [[]])[0]
+
         context_text = "\n\n".join(contexts)
-        
+
+
+        # -------- PREVIOUS CHAT MEMORY --------
+
+        history = ChatMessage.objects.filter(
+            user=user,
+            document=doc
+        ).order_by("-created_at")[:10]
+
+
+        messages = []
+
+
+        for chat in reversed(history):
+            messages.append({
+                "role": chat.role,
+                "content": chat.message
+            })
+
+
+        # Current AI instruction
+
         prompt = f"""
             You are a helpful AI assistant.
 
-            User profile:
-            - Name: {name}
+            User name:
+            {name}
 
-            Behavior rules:
-            - Use user's name occasionally in replies (not every sentence)
-            - Be natural, not repetitive
-            - Answer only from the document context
-            - If information is missing, say "I don't know"
+            Rules:
+            - Use user's name occasionally.
+            - Be conversational.
+            - Answer only from document context.
+            - Do not invent information.
+            - If answer is not available say:
 
-            Context:
+            "I'm sorry, I couldn't find that information in the uploaded document.
+
+            If you have any questions or need further assistance, please contact Ravi.
+
+            📧 Email: ravikalakoti16@gmail.com"
+
+
+            Document Context:
+
             {context_text}
 
-            User question:
+
+            Current Question:
+
             {message}
         """
+
+
+        messages.append({
+            "role": "user",
+            "content": prompt
+        })
+
+
+        # -------- OLLAMA --------
+
         from ollama import Client
-        client = Client(host='http://localhost:11434')
+
+        client = Client(
+            host='http://localhost:11434'
+        )
+
+
         response = client.chat(
             model='llama3.1',
-            messages=[{'role': 'user', 'content': prompt}]
+            messages=messages
         )
-        
+
+
         reply_content = response['message']['content']
-        
-        # Save query to database
+
+
+        # Save AI response
+
+        ChatMessage.objects.create(
+            user=user,
+            document=doc,
+            role="assistant",
+            message=reply_content
+        )
+
+
+        # Existing query tracking
+
         DocumentQuery.objects.create(
-            user=request.user,
+            user=user,
             document=doc,
             question=message
         )
-        
-        query_count = DocumentQuery.objects.filter(user=request.user).count()
-        
+
+
+        query_count = DocumentQuery.objects.filter(
+            user=user
+        ).count()
+
+
         return Response({
             'reply': reply_content,
             'matched_chunks': len(contexts),
@@ -294,10 +394,17 @@ def chat_with_document(request, doc_id):
             'limit': 10,
             'is_subscribed': is_subscribed
         })
-    
+
+
     except Exception as e:
-        print("chat_with_document error:", e)
-        return Response({'error': 'Internal server error'}, status=500)
+        print(
+            "chat_with_document error:",
+            e
+        )
+
+        return Response({
+            'error': 'Internal server error'
+        }, status=500)
 
 
 # -------------------------
@@ -410,3 +517,27 @@ def subscribe(request):
     subscription.save()
     
     return redirect('dashboard')
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chat_history(request, doc_id):
+
+    document = get_object_or_404(
+        Document,
+        id=doc_id,
+        user=request.user
+    )
+
+    messages = ChatMessage.objects.filter(
+        document=document,
+        user=request.user
+    ).order_by("created_at")
+
+    return Response([
+        {
+            "role": msg.role,
+            "message": msg.message
+        }
+        for msg in messages
+    ])
