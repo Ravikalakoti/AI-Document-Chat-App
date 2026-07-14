@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
+from datetime import timedelta
 
 from .models import Document, DocumentChunk, DocumentQuery, ChatMessage
 from accounts.models import Subscription

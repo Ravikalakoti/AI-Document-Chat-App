@@ -1,7 +1,285 @@
 {% extends 'docs/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - AI Doc Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes shakeAlert {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,53,69,.35); }
+    50% { box-shadow: 0 0 0 10px rgba(220,53,69,0); }
+  }
+  @keyframes progressFill {
+    from { width: 0%; }
+  }
+  @keyframes spinIcon {
+    0%, 85%, 100% { transform: scale(1) rotate(0deg); }
+    92% { transform: scale(1.25) rotate(-10deg); }
+  }
+
+  .dash-hero {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    border-radius: 24px;
+    padding: 2.2rem 2rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) forwards, gradientShift 15s ease infinite;
+  }
+  .dash-hero h2 { font-weight: 800; margin-bottom: .3rem; }
+  .dash-hero p { opacity: .85; margin-bottom: 0; }
+
+  .stat-row { margin-bottom: 1.5rem; }
+
+  .stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.04);
+    transition: transform .35s var(--ease-bounce), box-shadow .35s var(--ease-smooth);
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) forwards;
+    height: 100%;
+  }
+  .stat-card:nth-child(1) { animation-delay: .05s; }
+  .stat-card:nth-child(2) { animation-delay: .15s; }
+  .stat-card:nth-child(3) { animation-delay: .25s; }
+
+  .stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 45px rgba(102,126,234,.18);
+  }
+
+  .stat-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: .9rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 8px 20px rgba(102,126,234,.3);
+  }
+  .stat-label { color: #6c757d; font-size: .9rem; margin-bottom: .2rem; }
+  .stat-value { font-size: 1.8rem; font-weight: 800; color: #2d3748; }
+
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background: #eef0fb;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: .8rem;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    animation: progressFill 1.1s var(--ease-smooth) forwards;
+  }
+  .progress-fill.danger { background: linear-gradient(90deg, #ff6b6b, #dc3545); }
+  .progress-fill.warning { background: linear-gradient(90deg, #ffd700, #ff9f43); }
+
+  /* Alerts */
+  .alert {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    opacity: 0;
+    animation: fadeUp 0.6s var(--ease-smooth) forwards;
+  }
+  .alert-danger {
+    background: linear-gradient(135deg, #fff5f5, #ffe3e3);
+    color: #7a1c1c;
+    animation: fadeUp 0.6s var(--ease-smooth) forwards, shakeAlert 0.6s ease-in-out 0.6s;
+  }
+  .alert-danger i { animation: pulseGlow 1.8s infinite; border-radius: 50%; }
+  .alert-warning {
+    background: linear-gradient(135deg, #fffbea, #fff3cd);
+    color: #7a5b00;
+  }
+  .alert-link { font-weight: 700; }
+
+  /* Documents card */
+  .docs-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,.08);
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) 0.2s forwards;
+  }
+  .docs-card .card-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 1.2rem 1.6rem;
+  }
+  .docs-card .card-header h5 { font-weight: 700; margin: 0; }
+
+  .btn-upload {
+    background: white;
+    color: #667eea;
+    font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    padding: .45rem 1.2rem;
+    transition: all .3s var(--ease-bounce);
+  }
+  .btn-upload:hover {
+    transform: translateY(-2px) scale(1.04);
+    color: #764ba2;
+    box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  }
+
+  .table thead.table-light th {
+    background: #f7f7fb;
+    color: #4b5563;
+    font-weight: 700;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #eee;
+  }
+
+  .table tbody tr {
+    opacity: 0;
+    animation: fadeUp 0.5s var(--ease-smooth) forwards;
+    transition: background .25s var(--ease-smooth);
+  }
+  .table tbody tr:nth-child(1) { animation-delay: .05s; }
+  .table tbody tr:nth-child(2) { animation-delay: .1s; }
+  .table tbody tr:nth-child(3) { animation-delay: .15s; }
+  .table tbody tr:nth-child(4) { animation-delay: .2s; }
+  .table tbody tr:nth-child(5) { animation-delay: .25s; }
+  .table tbody tr:nth-child(n+6) { animation-delay: .3s; }
+
+  .table-hover tbody tr:hover {
+    background: rgba(102,126,234,.06);
+  }
+
+  .doc-title-cell {
+    font-weight: 600;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .doc-title-cell i { color: #667eea; font-size: 1.2rem; }
+
+  .btn-action {
+    border-radius: 10px !important;
+    font-weight: 600;
+    border: none;
+    transition: transform .25s var(--ease-bounce), box-shadow .25s var(--ease-smooth);
+  }
+  .btn-action:hover { transform: translateY(-2px); }
+
+  .btn-action.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .btn-action.btn-info { background: linear-gradient(135deg, #17a2b8, #20c997); color: white; }
+  .btn-action.btn-danger { background: linear-gradient(135deg, #ff6b6b, #dc3545); }
+
+  .empty-state {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    color: #6c757d;
+  }
+  .empty-state i {
+    font-size: 3rem;
+    color: #c9cfe8;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .btn-upload-outline {
+    background: transparent;
+    color: #667eea;
+    font-weight: 700;
+    border: 2px solid #667eea;
+    border-radius: 50px;
+    padding: .5rem 1.3rem;
+    transition: all .3s var(--ease-bounce);
+    display: inline-block;
+  }
+  .btn-upload-outline:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 20px rgba(102,126,234,.3);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
+
+<!-- Dashboard hero -->
+<div class="dash-hero">
+  <h2>👋 Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</h2>
+  <p>Here's what's happening with your documents today.</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row stat-row g-3">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="bi bi-files"></i></div>
+      <div class="stat-label">Total Documents</div>
+      <div class="stat-value">{{ docs|length }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="bi bi-chat-dots"></i></div>
+      <div class="stat-label">Queries Used</div>
+      <div class="stat-value">
+        {{ query_count }}{% if not is_subscribed %}<span style="font-size:1rem;color:#adb5bd;"> / 10</span>{% endif %}
+      </div>
+      {% if not is_subscribed %}
+      <div class="progress-track">
+        <div class="progress-fill {% if query_count >= 10 %}danger{% elif query_count >= 8 %}warning{% endif %}"
+             style="width: {% widthratio query_count 10 100 %}%;"></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="bi bi-star"></i></div>
+      <div class="stat-label">Plan</div>
+      <div class="stat-value" style="font-size:1.4rem;">
+        {% if is_subscribed %}
+          ⭐ Premium
+        {% else %}
+          Free
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Red Banner if limit reached -->
 {% if query_count >= 10 and not is_subscribed %}
 <div class="row mb-3">
@@ -12,7 +290,7 @@
         <div>
           <strong>🚨 Query Limit Reached!</strong>
           <p class="mb-0">
-            You have used all {{ query_count }}/10 free queries. 
+            You have used all {{ query_count }}/10 free queries.
             <a href="{% url 'subscription_plan' %}" class="alert-link">Subscribe now</a> for unlimited access!
           </p>
         </div>
@@ -33,7 +311,7 @@
         <div>
           <strong>⚠️ Almost at Limit!</strong>
           <p class="mb-0">
-            You have {{ query_count }}/10 queries used. 
+            You have {{ query_count }}/10 queries used.
             <a href="{% url 'subscription_plan' %}" class="alert-link">Subscribe</a> for unlimited access!
           </p>
         </div>
@@ -44,13 +322,15 @@
 </div>
 {% endif %}
 
-<!-- Your documents table here (from previous advanced UI) -->
+<!-- Documents table -->
 <div class="row">
   <div class="col-12">
-    <div class="card shadow-sm">
+    <div class="card docs-card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Documents</h5>
-        <a href="{% url 'upload_page' %}" class="btn btn-success btn-sm">Upload New</a>
+        <h5><i class="bi bi-folder2-open me-2"></i>Documents</h5>
+        <a href="{% url 'upload_page' %}" class="btn btn-upload btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Upload New
+        </a>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -66,21 +346,40 @@
             <tbody>
               {% for doc in docs %}
               <tr>
-                <td>{{ doc.title }}</td>
-                <td>{{ doc.file.name }}</td>
-                <td>{{ doc.created_at }}</td>
+                <td>
+                  <div class="doc-title-cell">
+                    <i class="bi bi-file-earmark-text"></i>
+                    {{ doc.title }}
+                  </div>
+                </td>
+                <td class="text-muted">{{ doc.file.name }}</td>
+                <td class="text-muted">{{ doc.created_at }}</td>
                 <td class="d-flex gap-2">
-                  <a href="{% url 'document_detail' doc.id %}" class="btn btn-sm btn-primary">Open</a>
-                  <a href="{% url 'document_analytics' doc.id %}" class="btn btn-sm btn-info">Analytics</a>
+                  <a href="{% url 'document_detail' doc.id %}" class="btn btn-sm btn-action btn-primary">
+                    <i class="bi bi-box-arrow-up-right"></i> Open
+                  </a>
+                  <a href="{% url 'document_analytics' doc.id %}" class="btn btn-sm btn-action btn-info">
+                    <i class="bi bi-graph-up"></i> Analytics
+                  </a>
                   <form action="{% url 'delete_document' doc.id %}" method="POST" onsubmit="return confirm('Delete?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-sm btn-action btn-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
                   </form>
                 </td>
               </tr>
               {% empty %}
               <tr>
-                <td colspan="4" class="text-center py-4">No documents yet.</td>
+                <td colspan="4">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <div>No documents yet.</div>
+                    <a href="{% url 'upload_page' %}" class="btn-upload-outline mt-3">
+                      <i class="bi bi-plus-lg me-1"></i>Upload your first document
+                    </a>
+                  </div>
+                </td>
               </tr>
               {% endfor %}
             </tbody>

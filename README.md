@@ -106,20 +106,29 @@ python manage.py runserver
 
 A fully functional AI-powered document chat system using RAG architecture.
 
-### 🏠 Dashboard
+### 🏡 Home
+![Home](screenshots/home.png)
+
+### 📊 Dashboard
 ![Dashboard](screenshots/dashboard.png)
 
 ### 📤 Upload Document
-![Upload](screenshots/upload.png)
+![Upload Document](screenshots/upload.png)
 
 ### 📄 Document Preview
-![Preview](screenshots/doc_preview.png)
+![Document Preview](screenshots/doc_preview.png)
 
-### 💬 AI Chat Interface
-![Chat](screenshots/chat_screen_with_doc.png)
+### 🤖 AI Document Chat
+![AI Chat](screenshots/chat.png)
 
-### 🧩 Document Chunks View
-![Chunks](screenshots/chunks.png)
+### 🔐 Login
+![Login](screenshots/login.png)
+
+### 📝 Sign Up
+![Sign Up](screenshots/signup.png)
+
+### 📈 Global Analytics
+![Global Analytics](screenshots/global_analytics.png)
 
 ---
 
