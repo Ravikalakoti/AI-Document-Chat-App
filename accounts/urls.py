@@ -26,5 +26,10 @@ urlpatterns = [
         views.user_profile_api,
         name='user-profile'
     ),
+    path(
+        'user-profile/update/',
+        views.update_profile_api,
+        name='update-user-profile'
+    ),
 
 ]

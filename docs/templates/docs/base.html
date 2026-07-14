@@ -224,23 +224,98 @@
 {% block extra_js %}{% endblock %}
 
 <script>
+let currentProfileData = {};
+
 async function openProfilePanel() {
     document.getElementById("profileDrawer").classList.add("open");
+    await loadProfileView();
+}
+
+async function loadProfileView() {
+    document.getElementById("profileContent").innerHTML = "Loading...";
 
     try {
         const res = await fetch("/accounts/user-profile/");
         const data = await res.json();
+        currentProfileData = data;
 
         document.getElementById("profileContent").innerHTML = `
             <div class="profile-item"><b>Username:</b> ${data.username}</div>
+            <div class="profile-item"><b>Name:</b> ${data.first_name || ''} ${data.last_name || ''}</div>
+            <div class="profile-item"><b>Email:</b> ${data.email || 'N/A'}</div>
             <div class="profile-item"><b>Plan:</b> ${data.plan}</div>
             <div class="profile-item"><b>Status:</b> ${data.is_subscribed ? "Active" : "Free"}</div>
             <div class="profile-item"><b>Subscribed At:</b> ${data.subscribed_at || "N/A"}</div>
             <div class="profile-item"><b>Expires At:</b> ${data.expires_at || "N/A"}</div>
+
+            <button onclick="showEditForm()" class="btn btn-sm btn-primary w-100 mt-3">
+                ✏️ Edit Profile
+            </button>
         `;
     } catch (err) {
         document.getElementById("profileContent").innerHTML =
             "<p class='text-danger'>Failed to load profile</p>";
+    }
+}
+
+function showEditForm() {
+    document.getElementById("profileContent").innerHTML = `
+        <div class="mb-3">
+            <label class="form-label">First Name</label>
+            <input type="text" id="editFirstName" class="form-control"
+                   value="${currentProfileData.first_name || ''}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" id="editLastName" class="form-control"
+                   value="${currentProfileData.last_name || ''}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" id="editEmail" class="form-control"
+                   value="${currentProfileData.email || ''}">
+        </div>
+
+        <div id="editError" class="text-danger small mb-2"></div>
+
+        <div class="d-flex gap-2">
+            <button onclick="saveProfile()" class="btn btn-sm btn-success flex-fill">
+                Save
+            </button>
+            <button onclick="loadProfileView()" class="btn btn-sm btn-secondary flex-fill">
+                Cancel
+            </button>
+        </div>
+    `;
+}
+
+async function saveProfile() {
+    const first_name = document.getElementById("editFirstName").value.trim();
+    const last_name = document.getElementById("editLastName").value.trim();
+    const email = document.getElementById("editEmail").value.trim();
+    const errorBox = document.getElementById("editError");
+
+    errorBox.textContent = "";
+
+    try {
+        const res = await fetch("/accounts/user-profile/update/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ first_name, last_name, email })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+            await loadProfileView();
+        } else {
+            errorBox.textContent = result.error || "Something went wrong";
+        }
+    } catch (err) {
+        errorBox.textContent = "Failed to save. Try again.";
     }
 }
 
