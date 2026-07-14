@@ -1,130 +1,354 @@
 {% extends 'docs/base.html' %}
-{% block title %}{{ doc.title }}{% endblock %}
+{% block title %}{{ doc.title }} - AI Doc Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(10px) scale(.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  * { box-sizing: border-box; }
+
+  /* ================= HERO ================= */
+  .doc-hero {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    border-radius: 20px;
+    padding: 1.4rem 1.6rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0;
+    animation: fadeUp 0.6s var(--ease-smooth) forwards, gradientShift 15s ease infinite;
+    min-width: 0;
+  }
+  .doc-hero-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .doc-hero-text { min-width: 0; }
+  .doc-hero h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .doc-hero p { margin: 0; opacity: .8; font-size: .82rem; }
+
+  /* ================= CARDS ================= */
+  .card {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .card.shadow-sm {
+    box-shadow: 0 10px 30px rgba(0,0,0,.06) !important;
+    opacity: 0;
+    animation: fadeUp 0.6s var(--ease-smooth) forwards;
+    transition: box-shadow .3s var(--ease-smooth);
+  }
+  .card.shadow-sm:hover { box-shadow: 0 16px 40px rgba(0,0,0,.09) !important; }
+
+  .card-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    font-weight: 700;
+    padding: .85rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .card-header h5 { margin: 0; color: white; font-size: .98rem; }
+
+  .doc-card iframe {
+      border-radius: 10px;
+  }
+
+  .chunk-box {
+      background: #f9f9fd;
+      border: 1px solid #eee;
+      border-left: 3px solid #667eea;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transition: transform .2s var(--ease-smooth);
+  }
+  .chunk-box:hover { transform: translateX(4px); }
+
+  /* ================= CHAT CARD ================= */
+  .chat-card {
+      height: 80vh;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      animation-delay: .15s;
+  }
+
+  .chat-header {
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: .5rem;
+  }
+  .chat-header .chat-title {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      min-width: 0;
+      flex-shrink: 1;
+  }
+  .chat-header .chat-title span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+
+  .chat-body {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      padding: .9rem;
+  }
+
+  .night-btn {
+      border-radius: 50px !important;
+      background: rgba(255,255,255,.15) !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,.4) !important;
+      font-weight: 600;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: all .3s var(--ease-bounce);
+  }
+  .night-btn:hover {
+      background: rgba(255,255,255,.28) !important;
+      transform: translateY(-2px);
+  }
+
+  .chat-box {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px;
+      background: #f9f9fd;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      scroll-behavior: smooth;
+  }
+
+  .message {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      margin-bottom: 12px;
+      animation: bubbleIn .3s var(--ease-smooth) forwards;
+  }
+  .message.user { justify-content: flex-end; }
+  .message.ai { justify-content: flex-start; }
+
+  .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      animation: popIn .3s var(--ease-bounce);
+  }
+  .message.ai .avatar {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+  }
+  .message.user .avatar {
+      background: #e2e5fb;
+      color: #4b4a8f;
+      order: 2;
+  }
+
+  .bubble {
+      max-width: 74%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  }
+
+  .user .bubble {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+  }
+
+  .ai .bubble {
+      background: #fff;
+      border: 1px solid #eee;
+      border-bottom-left-radius: 6px;
+  }
+
+  .bubble ul { margin: 6px 0; padding-left: 20px; }
+  .bubble li { margin: 4px 0; }
+  .bubble strong { color: #111; }
+  .user .bubble strong { color: #fff; }
+  .bubble p:last-child { margin-bottom: 0; }
+
+  .subscribe-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ffd700, #ff6b6b);
+      color: white !important;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all .3s var(--ease-bounce);
+      box-shadow: 0 8px 20px rgba(255,107,107,.35);
+  }
+  .subscribe-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 12px 28px rgba(255,107,107,.5);
+      color: white !important;
+  }
+
+  /* INPUT BAR — flex based, send button never disappears */
+  .chat-input {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+  }
+  .chat-input .form-control {
+      flex: 1 1 auto;
+      min-width: 0;
+      border-radius: 30px !important;
+      padding: 12px 18px;
+      border: 1px solid #dee2e6;
+      transition: all .3s var(--ease-smooth);
+  }
+  .chat-input .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102,126,234,.15);
+      outline: none;
+  }
+  .chat-send-btn {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      color: white;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(102,126,234,.35);
+      transition: transform .3s var(--ease-bounce), box-shadow .3s var(--ease-smooth);
+  }
+  .chat-send-btn:hover {
+      transform: scale(1.08) rotate(6deg);
+      box-shadow: 0 10px 26px rgba(102,126,234,.5);
+  }
+  .chat-send-btn:active { transform: scale(.94); }
+
+  .typing { display: flex; gap: 5px; padding: 4px 0; }
+  .typing span {
+      width: 6px; height: 6px;
+      background: #667eea;
+      border-radius: 50%;
+      animation: bounce 1.3s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ================= DARK MODE ================= */
+  body.dark-mode { background: #14121f !important; }
+  body.dark-mode .doc-hero { box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  body.dark-mode .card { background: #1e1c2e; color: #e5e5f0; }
+  body.dark-mode .card-header {
+      background: linear-gradient(135deg, #4c3f8f, #302b63) !important;
+  }
+  body.dark-mode .chat-box { background: #171525; border-color: #2c2942; }
+  body.dark-mode .ai .bubble {
+      background: #23213a; border-color: #33304d; color: #e5e5f0;
+  }
+  body.dark-mode .ai .bubble strong { color: #fff; }
+  body.dark-mode .message.user .avatar { background: #33304d; color: #cfcde0; }
+  body.dark-mode .chunk-box { background: #1a1830; border-color: #2c2942; color: #cfcde0; }
+  body.dark-mode .chat-input .form-control {
+      background: #1e1c2e; color: #e5e5f0; border-color: #33304d;
+  }
+  body.dark-mode .text-muted { color: #8a87a6 !important; }
+  body.dark-mode .alert-info { background: #1e2a3d; color: #a8d0f0; border: none; }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 992px) {
+    .chat-card { height: 75vh; }
+  }
+
+  @media (max-width: 576px) {
+    .doc-hero { padding: 1.1rem 1.2rem; border-radius: 16px; }
+    .doc-hero h1 { font-size: 1.1rem; }
+    .doc-hero p { font-size: .75rem; }
+    .doc-hero-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+
+    .chat-card { height: 72vh; min-height: 380px; }
+    .night-btn span.label { display: none; }
+    .night-btn { padding: .4rem .6rem; }
+
+    .bubble { max-width: 84%; font-size: 13.5px; }
+    .avatar { width: 26px; height: 26px; font-size: 13px; }
+
+    .chat-send-btn { width: 42px; height: 42px; }
+    .chat-input .form-control { padding: 10px 14px; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 
-<style>
-/* =========================
-   LEFT PANEL (DOCUMENT)
-========================= */
-.doc-card iframe {
-    border-radius: 10px;
-}
-
-/* =========================
-   CHAT CARD
-========================= */
-.chat-card {
-    height: 85vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-/* CHAT BOX */
-.chat-box {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    scroll-behavior: smooth;
-}
-
-/* MESSAGE ROW */
-.message {
-    display: flex;
-    margin-bottom: 12px;
-}
-
-/* USER RIGHT */
-.message.user {
-    justify-content: flex-end;
-}
-
-/* AI LEFT */
-.message.ai {
-    justify-content: flex-start;
-}
-
-/* BUBBLES */
-.bubble {
-    max-width: 80%;
-    padding: 10px 14px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.4;
-    word-break: break-word;
-}
-
-/* USER STYLE */
-.user .bubble {
-    background: #0d6efd;
-    color: #fff;
-    border-bottom-right-radius: 6px;
-}
-
-/* AI STYLE */
-.ai .bubble {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-bottom-left-radius: 6px;
-}
-
-/* INPUT AREA FIXED */
-.chat-input {
-    margin-top: 10px;
-}
-
-/* CHUNKS */
-.chunk-box {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    padding: 10px;
-    border-radius: 10px;
-}
-
-/* TYPING DOTS */
-.typing {
-    display: flex;
-    gap: 5px;
-}
-
-.typing span {
-    width: 6px;
-    height: 6px;
-    background: #888;
-    border-radius: 50%;
-    animation: bounce 1.3s infinite;
-}
-
-.bubble ul {
-    margin: 6px 0;
-    padding-left: 20px;
-}
-
-.bubble li {
-    margin: 4px 0;
-}
-
-.bubble strong {
-    color: #111;
-}
-
-.typing span:nth-child(2) { animation-delay: 0.2s; }
-.typing span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes bounce {
-    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-    40% { transform: translateY(-5px); opacity: 1; }
-}
-</style>
+<div class="doc-hero">
+  <div class="doc-hero-icon"><i class="bi bi-file-earmark-text"></i></div>
+  <div class="doc-hero-text">
+    <h1>{{ doc.title }}</h1>
+    <p>Preview the document, review extracted chunks, and chat with it below</p>
+  </div>
+</div>
 
 <div class="row g-4">
 
@@ -132,19 +356,19 @@
   <div class="col-lg-7">
 
     <div class="card shadow-sm mb-4 doc-card">
-      <div class="card-header">
-        <h5 class="mb-0">{{ doc.title }}</h5>
-      </div>
+<!--       <div class="card-header">
+        <i class="bi bi-eye"></i>
+      </div> -->
 
       <div class="card-body p-0">
         {% if doc.file.url|lower|slice:"-4:" == ".pdf" %}
             <iframe src="{{ doc.file.url }}" width="100%" height="600"></iframe>
         {% else %}
-            <div class="alert alert-info">
+            <div class="alert alert-info m-3">
                 Preview is not available for this file type.
                 <br><br>
                 <a href="{{ doc.file.url }}" class="btn btn-primary" target="_blank">
-                    Download File
+                    <i class="bi bi-download me-1"></i>Download File
                 </a>
             </div>
         {% endif %}
@@ -153,7 +377,8 @@
 
     <div class="card shadow-sm">
       <div class="card-header">
-        <h5 class="mb-0">Extracted Chunks</h5>
+        <i class="bi bi-layers"></i>
+        <h5>Extracted Chunks</h5>
       </div>
 
       <div class="card-body" style="max-height: 300px; overflow-y: auto;">
@@ -175,10 +400,13 @@
 
     <div class="card shadow-sm chat-card">
 
-      <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">🤖 Chat with Document</h5>
-        <button class="btn btn-sm btn-outline-secondary" onclick="toggleDarkMode()">
-        🌙 Night Mode
+      <div class="card-header chat-header">
+        <div class="chat-title">
+          <span>🤖</span>
+          <span>Chat with Document</span>
+        </div>
+        <button class="btn btn-sm night-btn" onclick="toggleDarkMode()">
+          🌙 <span class="label">Night Mode</span>
         </button>
       </div>
 
@@ -188,12 +416,13 @@
         <div id="chatBox" class="chat-box"></div>
 
         <!-- INPUT -->
-        <div class="input-group chat-input">
+        <div class="chat-input">
           <input type="text" id="chatInput" class="form-control"
-                 placeholder="Ask a question...">
+                 placeholder="Ask a question..."
+                 onkeydown="if(event.key==='Enter'){sendChat({{ doc.id }});}">
 
-          <button class="btn btn-primary" onclick="sendChat({{ doc.id }})">
-            Send
+          <button class="chat-send-btn" onclick="sendChat({{ doc.id }})" aria-label="Send">
+            <i class="bi bi-send-fill"></i>
           </button>
         </div>
 
@@ -203,7 +432,9 @@
   </div>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 const chatBox = document.getElementById("chatBox");
 const chatInput = document.getElementById("chatInput");
@@ -213,14 +444,18 @@ function scrollBottom() {
 }
 
 function addMessage(text, sender) {
-    const div = document.createElement("div");
-    div.className = `message ${sender}`;
+    const row = document.createElement("div");
+    row.className = `message ${sender}`;
 
     const html = marked.parse(text);
+    const avatar = sender === "ai" ? "🤖" : "🧑";
 
-    div.innerHTML = `<div class="bubble">${html}</div>`;
+    row.innerHTML = `
+        <div class="avatar">${avatar}</div>
+        <div class="bubble">${html}</div>
+    `;
 
-    chatBox.appendChild(div);
+    chatBox.appendChild(row);
     scrollBottom();
 }
 
@@ -264,6 +499,7 @@ function showTyping() {
     typing.id = "typingBox";
 
     typing.innerHTML = `
+        <div class="avatar">🤖</div>
         <div class="bubble">
             <div class="typing">
                 <span></span><span></span><span></span>
@@ -373,5 +609,4 @@ window.addEventListener("load", () => {
 
 });
 </script>
-
 {% endblock %}

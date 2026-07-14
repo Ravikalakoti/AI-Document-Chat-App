@@ -1,64 +1,194 @@
 {% extends 'docs/base.html' %}
-{% block title %}Global Analytics{% endblock %}
+{% block title %}Global Analytics - AI Doc Chat{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
-  .metric-card {
-    border-radius: 12px;
-    transition: transform 0.2s, box-shadow 0.2s;
+  :root {
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .metric-value {
-    font-size: 1.8rem;
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .analytics-hero {
+    background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    border-radius: 24px;
+    padding: 2rem 2rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) forwards, gradientShift 15s ease infinite;
+  }
+  .analytics-hero h4 { font-weight: 800; margin: 0; }
+
+  .btn-upload {
+    background: white;
+    color: #667eea;
     font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    padding: .5rem 1.3rem;
+    transition: all .3s var(--ease-bounce);
+  }
+  .btn-upload:hover {
+    transform: translateY(-2px) scale(1.04);
+    color: #764ba2;
+    box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  }
+
+  .metric-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    transition: transform .35s var(--ease-bounce), box-shadow .35s var(--ease-smooth);
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) forwards;
+    overflow: hidden;
+    position: relative;
+  }
+  .metric-card:nth-child(1) { animation-delay: .05s; }
+  .metric-card:nth-child(2) { animation-delay: .15s; }
+  .metric-card:nth-child(3) { animation-delay: .25s; }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 5px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+  }
+
+  .metric-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 45px rgba(102,126,234,.18);
+  }
+
+  .metric-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    color: white;
+    margin: 0 auto .8rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 8px 20px rgba(102,126,234,.3);
+  }
+
+  .metric-value {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #2d3748;
   }
   .metric-label {
     color: #6c757d;
     font-size: 0.9rem;
+    margin-top: .2rem;
   }
+
   .chart-container {
-    border-radius: 12px;
-    background: #fff;
-    padding: 1rem;
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) 0.2s forwards;
+    transition: box-shadow .3s var(--ease-smooth);
+  }
+  .chart-container:hover {
+    box-shadow: 0 20px 45px rgba(0,0,0,.1);
+  }
+  .chart-container .card-title {
+    color: #2d3748;
+  }
+  .chart-container .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin-right: 8px;
+  }
+
+  .questions-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+    opacity: 0;
+    animation: fadeUp 0.7s var(--ease-smooth) 0.3s forwards;
+  }
+
+  .table thead.table-light th {
+    background: #f7f7fb;
+    color: #4b5563;
+    font-weight: 700;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #eee;
+  }
+  .table-hover tbody tr {
+    transition: background .25s var(--ease-smooth);
+  }
+  .table-hover tbody tr:hover {
+    background: rgba(102,126,234,.06);
+  }
+
+  .empty-chart {
+    text-align: center;
+    padding: 2rem 0;
+    color: #adb5bd;
   }
 </style>
+{% endblock %}
 
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center">
-      <h4 class="mb-0 fw-bold">Global Analytics</h4>
-      <a href="{% url 'upload_page' %}" class="btn btn-success btn-sm">
-        <i class="bi bi-upload"></i> Upload New Document
-      </a>
-    </div>
-  </div>
+{% block content %}
+
+<div class="analytics-hero">
+  <h4><i class="bi bi-bar-chart-line me-2"></i>Global Analytics</h4>
+  <a href="{% url 'upload_page' %}" class="btn btn-upload btn-sm">
+    <i class="bi bi-upload me-1"></i> Upload New Document
+  </a>
 </div>
 
 <!-- Metric Cards -->
-<div class="row mb-4">
-  <div class="col-md-4 mb-3">
-    <div class="card metric-card shadow-sm h-100">
+<div class="row mb-4 g-3">
+  <div class="col-md-4">
+    <div class="card metric-card h-100">
       <div class="card-body text-center">
-        <div class="metric-value text-primary">{{ docs_uploaded }}</div>
+        <div class="metric-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="metric-value">{{ docs_uploaded }}</div>
         <div class="metric-label">Documents Uploaded</div>
       </div>
     </div>
   </div>
-  <div class="col-md-4 mb-3">
-    <div class="card metric-card shadow-sm h-100">
+  <div class="col-md-4">
+    <div class="card metric-card h-100">
       <div class="card-body text-center">
-        <div class="metric-value text-success">{{ total_queries }}</div>
+        <div class="metric-icon"><i class="bi bi-chat-dots"></i></div>
+        <div class="metric-value">{{ total_queries }}</div>
         <div class="metric-label">Total Queries</div>
       </div>
     </div>
   </div>
-  <div class="col-md-4 mb-3">
-    <div class="card metric-card shadow-sm h-100">
+  <div class="col-md-4">
+    <div class="card metric-card h-100">
       <div class="card-body text-center">
-        <div class="metric-value text-info">
+        <div class="metric-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="metric-value">
           {% if docs_uploaded > 0 %}
             {{ total_queries|floatformat:0 }}
           {% else %}
@@ -75,13 +205,16 @@
 <div class="row">
   <!-- Top Questions -->
   <div class="col-md-6 mb-4">
-    <div class="card shadow-sm chart-container">
+    <div class="card chart-container">
       <div class="card-body">
         <h6 class="card-title fw-bold mb-3">Top Questions (All Documents)</h6>
         {% if top_questions %}
           <div id="top-questions-chart"></div>
         {% else %}
-          <p class="text-muted">No queries yet.</p>
+          <div class="empty-chart">
+            <i class="bi bi-bar-chart" style="font-size:2rem;"></i>
+            <p class="mt-2 mb-0">No queries yet.</p>
+          </div>
         {% endif %}
       </div>
     </div>
@@ -89,13 +222,16 @@
 
   <!-- Queries per Document -->
   <div class="col-md-6 mb-4">
-    <div class="card shadow-sm chart-container">
+    <div class="card chart-container">
       <div class="card-body">
         <h6 class="card-title fw-bold mb-3">Queries per Document</h6>
         {% if per_doc %}
           <div id="per-doc-chart"></div>
         {% else %}
-          <p class="text-muted">No queries yet.</p>
+          <div class="empty-chart">
+            <i class="bi bi-bar-chart" style="font-size:2rem;"></i>
+            <p class="mt-2 mb-0">No queries yet.</p>
+          </div>
         {% endif %}
       </div>
     </div>
@@ -105,11 +241,11 @@
 {% if top_questions %}
 <div class="row">
   <div class="col-12">
-    <div class="card shadow-sm">
+    <div class="card questions-card">
       <div class="card-body">
         <h6 class="fw-bold mb-3">Top 10 Questions</h6>
         <div class="table-responsive">
-          <table class="table table-hover">
+          <table class="table table-hover mb-0">
             <thead class="table-light">
               <tr>
                 <th>Question</th>
@@ -120,7 +256,11 @@
               {% for q in top_questions %}
               <tr>
                 <td>{{ q.question }}</td>
-                <td class="text-end">{{ q.count }}</td>
+                <td class="text-end">
+                  <span class="badge rounded-pill" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                    {{ q.count }}
+                  </span>
+                </td>
               </tr>
               {% endfor %}
             </tbody>
@@ -148,7 +288,7 @@
       x: counts,
       y: questions,
       orientation: 'h',
-      marker: { color: '#0d6efd' }
+      marker: { color: '#667eea' }
     }
   ], {
     margin: { l: 120, r: 20, t: 20, b: 40 },
@@ -169,7 +309,7 @@
       type: 'bar',
       x: docs,
       y: counts,
-      marker: { color: '#198754' }
+      marker: { color: '#764ba2' }
     }
   ], {
     margin: { l: 20, r: 20, t: 20, b: 80 },

@@ -13,20 +13,81 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     <style>
+        :root {
+            --brand-1: #0f0c29;
+            --brand-2: #302b63;
+            --brand-3: #667eea;
+            --brand-4: #764ba2;
+        }
+
+        body {
+            background: #f4f5fb;
+        }
+
         /* ================= NAVBAR ================= */
         .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,.1);
+            background: linear-gradient(-45deg, var(--brand-1), var(--brand-2), #24243e, var(--brand-3), var(--brand-4));
+            background-size: 400% 400%;
+            animation: navGradient 15s ease infinite;
+            box-shadow: 0 4px 20px rgba(102,126,234,.25);
+        }
+
+        @keyframes navGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .navbar-brand {
             font-weight: 700;
             font-size: 1.2rem;
+            transition: transform .3s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .navbar-brand:hover {
+            transform: scale(1.04);
         }
 
         .user-badge {
             color: white;
             font-size: .9rem;
             margin-right: 10px;
+        }
+
+        .navbar .btn {
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all .3s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .navbar .btn:hover {
+            transform: translateY(-2px);
+        }
+        .navbar .btn-primary {
+            background: white;
+            color: #667eea;
+            border: none;
+        }
+        .navbar .btn-primary:hover {
+            background: #f0f0ff;
+            color: #764ba2;
+        }
+        .navbar .btn-outline-light:hover {
+            background: rgba(255,255,255,.15);
+        }
+        .navbar .btn-success {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+        .navbar .btn-danger {
+            background: rgba(220,53,69,.85);
+            border: none;
+        }
+        .navbar .btn-outline-info {
+            border-color: rgba(255,255,255,.5);
+            color: white;
+        }
+        .navbar .btn-outline-info:hover {
+            background: rgba(255,255,255,.15);
+            border-color: white;
         }
 
         @media(max-width:768px) {
@@ -75,16 +136,20 @@
         .profile-item {
             margin-bottom: 12px;
             padding: 10px;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f4f5fb, #eceffc);
+            border-left: 3px solid #667eea;
             border-radius: 8px;
         }
     </style>
+
+    {% block extra_css %}{% endblock %}
+
 </head>
 
-<body class="bg-light">
+<body>
 
 <!-- ================= NAVBAR ================= -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
 
         <a class="navbar-brand" href="{% url 'home' %}">
@@ -155,6 +220,8 @@
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/chat.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
 
 <script>
 async function openProfilePanel() {

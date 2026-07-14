@@ -1,193 +1,277 @@
 {% extends 'docs/base.html' %}
+{% block title %}Sign Up - AI Doc Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+  }
+  @keyframes logoPop {
+    0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .signup-wrapper{
+      min-height:85vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      border-radius: 28px;
+  }
+
+  .signup-wrapper .particle {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(255,255,255,0.6);
+      animation: float 16s infinite;
+      z-index: 0;
+  }
+
+  .signup-card{
+      width:100%;
+      max-width:600px;
+      border:none;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 25px 70px rgba(0,0,0,.35);
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      animation: fadeUp 0.8s var(--ease-smooth) forwards;
+      transition: transform 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth);
+  }
+  .signup-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 35px 90px rgba(0,0,0,.4);
+  }
+
+  .signup-header{
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      background-size: 200% 200%;
+      animation: gradientShift 6s ease infinite;
+      color:white;
+      text-align:center;
+      padding:35px;
+      position: relative;
+      overflow: hidden;
+  }
+  .signup-header h2{
+      margin:0;
+      font-weight:700;
+      opacity: 0;
+      animation: fadeUp 0.7s var(--ease-smooth) 0.2s forwards;
+  }
+  .signup-header p{
+      margin-top:10px;
+      margin-bottom:0;
+      opacity:0;
+      animation: fadeUp 0.7s var(--ease-smooth) 0.3s forwards;
+  }
+  .signup-header p.anim-done { opacity: .9; }
+
+  .signup-body{
+      padding:35px;
+      background:white;
+      opacity: 0;
+      animation: fadeUp 0.7s var(--ease-smooth) 0.35s forwards;
+  }
+
+  .signup-body input{
+      width:100%;
+      border:1px solid #dee2e6;
+      border-radius:12px !important;
+      padding:12px 15px;
+      transition: all .3s var(--ease-smooth);
+  }
+  .signup-body input:hover {
+      border-color:#b3bdf5;
+  }
+  .signup-body input:focus{
+      border-color:#667eea;
+      box-shadow:0 0 0 4px rgba(102,126,234,.15);
+      transform: translateY(-2px);
+      outline: none;
+  }
+
+  .signup-btn{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      padding:13px;
+      font-weight:600;
+      margin-top:10px;
+      position: relative;
+      overflow: hidden;
+      color: white;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: transform .3s var(--ease-bounce), box-shadow .3s var(--ease-smooth);
+      box-shadow: 0 10px 30px rgba(102,126,234,.35);
+  }
+  .signup-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+      transition: left 0.6s;
+  }
+  .signup-btn:hover::before { left: 100%; }
+  .signup-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(102,126,234,.5);
+  }
+
+  .login-link{
+      text-align:center;
+      margin-top:20px;
+      opacity: 0;
+      animation: fadeUp 0.7s var(--ease-smooth) 0.45s forwards;
+  }
+  .login-link a{
+      text-decoration:none;
+      font-weight:600;
+      color: #667eea;
+      position: relative;
+  }
+  .login-link a::after {
+      content: '';
+      position: absolute;
+      left: 0; bottom: -2px;
+      width: 0%; height: 2px;
+      background: #667eea;
+      transition: width .3s var(--ease-smooth);
+  }
+  .login-link a:hover::after { width: 100%; }
+
+  .logo-circle{
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      background:white;
+      color:#667eea;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:36px;
+      margin:0 auto 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      animation: logoPop 0.7s var(--ease-bounce) forwards, logoFloat 3s ease-in-out 0.7s infinite;
+  }
+
+  .form-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:15px;
+  }
+  .helptext{
+      display:none;
+  }
+  .errorlist{
+      color:#dc3545;
+      list-style:none;
+      padding:0;
+      margin-bottom:10px;
+      font-size:14px;
+      animation: fadeUp 0.4s var(--ease-smooth) forwards;
+  }
+
+  @media(max-width:576px){
+      .form-row{
+          grid-template-columns:1fr;
+      }
+      .signup-body{
+          padding:25px;
+      }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-
-<style>
-.signup-wrapper{
-    min-height:85vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-}
-
-.signup-card{
-    width:100%;
-    max-width:600px;
-    border:none;
-    border-radius:24px;
-    overflow:hidden;
-    box-shadow:0 20px 50px rgba(0,0,0,.12);
-}
-
-.signup-header{
-    background:linear-gradient(135deg,#198754,#20c997);
-    color:white;
-    text-align:center;
-    padding:35px;
-}
-
-.signup-header h2{
-    margin:0;
-    font-weight:700;
-}
-
-.signup-header p{
-    margin-top:10px;
-    margin-bottom:0;
-    opacity:.9;
-}
-
-.signup-body{
-    padding:35px;
-    background:white;
-}
-
-.signup-body input{
-    width:100%;
-    border:1px solid #dee2e6;
-    border-radius:12px !important;
-    padding:12px 15px;
-    transition:.3s;
-}
-
-.signup-body input:focus{
-    border-color:#198754;
-    box-shadow:0 0 0 4px rgba(25,135,84,.15);
-}
-
-.signup-btn{
-    width:100%;
-    border:none;
-    border-radius:12px;
-    padding:13px;
-    font-weight:600;
-    margin-top:10px;
-}
-
-.login-link{
-    text-align:center;
-    margin-top:20px;
-}
-
-.login-link a{
-    text-decoration:none;
-    font-weight:600;
-}
-
-.logo-circle{
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    background:white;
-    color:#198754;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:36px;
-    margin:0 auto 15px;
-}
-
-.form-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:15px;
-}
-
-.helptext{
-    display:none;
-}
-
-.errorlist{
-    color:#dc3545;
-    list-style:none;
-    padding:0;
-    margin-bottom:10px;
-    font-size:14px;
-}
-
-@media(max-width:576px){
-    .form-row{
-        grid-template-columns:1fr;
-    }
-
-    .signup-body{
-        padding:25px;
-    }
-}
-</style>
-
 <div class="signup-wrapper">
 
-<div class="card signup-card">
+  <!-- floating particles -->
+  <div class="particle" style="left: 8%; animation-delay: 0s;"></div>
+  <div class="particle" style="left: 20%; animation-delay: 3s;"></div>
+  <div class="particle" style="left: 35%; animation-delay: 6s;"></div>
+  <div class="particle" style="left: 50%; animation-delay: 1.5s;"></div>
+  <div class="particle" style="left: 65%; animation-delay: 4.5s;"></div>
+  <div class="particle" style="left: 80%; animation-delay: 2s;"></div>
+  <div class="particle" style="left: 92%; animation-delay: 5s;"></div>
 
-    <div class="signup-header">
-
-        <div class="logo-circle">
-            🚀
-        </div>
-
-        <h2>Create Account</h2>
-
-        <p>
-            Join AI Doc Chat and start chatting with your documents
-        </p>
-
-    </div>
-
-    <div class="signup-body">
-
-        <form method="post">
-
-            {% csrf_token %}
-
-            <div class="form-row mb-3">
-                <div>
-                    {{ form.first_name }}
-                </div>
-
-                <div>
-                    {{ form.last_name }}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                {{ form.username }}
-            </div>
-
-            <div class="mb-3">
-                {{ form.password1 }}
-            </div>
-
-            <div class="mb-3">
-                {{ form.password2 }}
-            </div>
-
-            <button
-                type="submit"
-                class="btn btn-success signup-btn">
-
-                Create Account 🚀
-
-            </button>
-
-        </form>
-
-        <div class="login-link">
-
-            Already have an account?
-
-            <a href="{% url 'login' %}">
-                Login
-
-            </a>
-
-        </div>
-
-    </div>
-
+  <div class="card signup-card">
+      <div class="signup-header">
+          <div class="logo-circle">
+              🚀
+          </div>
+          <h2>Create Account</h2>
+          <p class="anim-done">
+              Join AI Doc Chat and start chatting with your documents
+          </p>
+      </div>
+      <div class="signup-body">
+          <form method="post">
+              {% csrf_token %}
+              <div class="form-row mb-3">
+                  <div>
+                      {{ form.first_name }}
+                  </div>
+                  <div>
+                      {{ form.last_name }}
+                  </div>
+              </div>
+              <div class="mb-3">
+                  {{ form.username }}
+              </div>
+              <div class="mb-3">
+                  {{ form.password1 }}
+              </div>
+              <div class="mb-3">
+                  {{ form.password2 }}
+              </div>
+              <button
+                  type="submit"
+                  class="btn signup-btn">
+                  Create Account 🚀
+              </button>
+          </form>
+          <div class="login-link">
+              Already have an account?
+              <a href="{% url 'login' %}">
+                  Login
+              </a>
+          </div>
+      </div>
+  </div>
 </div>
-
-</div>
-
 {% endblock %}

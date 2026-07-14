@@ -3,6 +3,11 @@
 
 {% block extra_css %}
 <style>
+  :root {
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   /* Premium gradient background with animation */
   .home-bg {
     background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #667eea, #764ba2);
@@ -11,12 +16,46 @@
     min-height: 100vh;
     padding: 0;
     position: relative;
+    overflow: hidden;
   }
 
   @keyframes gradientShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+  }
+
+  /* Soft glow orbs behind content for extra depth */
+  .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .glow-orb.one {
+    width: 500px; height: 500px;
+    background: #667eea;
+    top: -150px; left: -100px;
+    animation: orbDrift 18s ease-in-out infinite;
+  }
+  .glow-orb.two {
+    width: 400px; height: 400px;
+    background: #ff6b6b;
+    bottom: 10%; right: -100px;
+    animation: orbDrift 22s ease-in-out infinite reverse;
+  }
+  .glow-orb.three {
+    width: 350px; height: 350px;
+    background: #ffd700;
+    top: 40%; left: 45%;
+    animation: orbDrift 25s ease-in-out infinite;
+  }
+  @keyframes orbDrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(40px, -30px) scale(1.1); }
+    66% { transform: translate(-30px, 40px) scale(0.95); }
   }
 
   /* Floating particles */
@@ -34,8 +73,9 @@
     position: absolute;
     width: 5px;
     height: 5px;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255,255,255,0.6);
     animation: float 20s infinite;
   }
 
@@ -44,6 +84,16 @@
     10% { opacity: 1; }
     90% { opacity: 1; }
     100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+  }
+
+  /* Generic entrance animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim-fade-up {
+    opacity: 0;
+    animation: fadeUp 0.9s var(--ease-smooth) forwards;
   }
 
   /* Hero section */
@@ -65,6 +115,17 @@
     display: inline-block;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+    animation: fadeUp 0.7s var(--ease-smooth) forwards, badgeFloat 3.5s ease-in-out 0.7s infinite;
+    opacity: 0;
+  }
+  .hero-badge i { animation: sparkleSpin 3s linear infinite; display: inline-block; }
+  @keyframes sparkleSpin {
+    0%, 80%, 100% { transform: rotate(0deg) scale(1); }
+    90% { transform: rotate(180deg) scale(1.3); }
+  }
+  @keyframes badgeFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
   }
 
   .hero-title {
@@ -75,13 +136,22 @@
     text-shadow: 0 8px 40px rgba(0,0,0,0.4);
     letter-spacing: -2px;
     line-height: 1.1;
+    animation: fadeUp 0.9s var(--ease-smooth) 0.15s forwards;
+    opacity: 0;
   }
 
   .hero-title span {
     color: #ffd700;
     background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
+    background-size: 200% 200%;
     padding: 0 0.5rem;
     border-radius: 10px;
+    animation: shimmerText 4s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes shimmerText {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
   }
 
   .hero-subtitle {
@@ -92,6 +162,8 @@
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    animation: fadeUp 0.9s var(--ease-smooth) 0.3s forwards;
+    opacity: 0;
   }
 
   .creator-name {
@@ -100,10 +172,21 @@
     margin-top: 1.5rem;
     font-weight: 400;
     letter-spacing: 1px;
+    animation: fadeUp 0.9s var(--ease-smooth) 0.45s forwards;
+    opacity: 0;
   }
 
   .creator-name i {
     color: #ff6b6b;
+    animation: heartBeat 1.6s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    15% { transform: scale(1.3); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.2); }
+    60% { transform: scale(1); }
   }
 
   .hero-buttons {
@@ -111,6 +194,8 @@
     gap: 1.5rem;
     justify-content: center;
     margin-top: 3rem;
+    animation: fadeUp 0.9s var(--ease-smooth) 0.6s forwards;
+    opacity: 0;
   }
 
   .btn-hero-primary {
@@ -121,12 +206,23 @@
     font-weight: 700;
     border-radius: 50px;
     border: none;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s var(--ease-bounce);
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     display: inline-flex;
     align-items: center;
     gap: 0.8rem;
+    position: relative;
+    overflow: hidden;
   }
+  .btn-hero-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(102,126,234,0.25), transparent);
+    transition: left 0.6s;
+  }
+  .btn-hero-primary:hover::before { left: 100%; }
 
   .btn-hero-primary:hover {
     transform: translateY(-5px) scale(1.05);
@@ -141,7 +237,7 @@
     font-weight: 700;
     border-radius: 50px;
     border: 2px solid rgba(255,255,255,0.3);
-    transition: all 0.4s;
+    transition: all 0.4s var(--ease-smooth);
     display: inline-flex;
     align-items: center;
     gap: 0.8rem;
@@ -161,7 +257,7 @@
     z-index: 2;
   }
 
-  .plans-title {
+  .plans-title, .features-title {
     text-align: center;
     color: white;
     font-size: 3rem;
@@ -170,23 +266,27 @@
     text-shadow: 0 4px 20px rgba(0,0,0,0.3);
   }
 
-  .plans-subtitle {
+  .plans-subtitle, .features-subtitle {
     text-align: center;
     color: rgba(255,255,255,0.7);
     font-size: 1.2rem;
     margin-bottom: 4rem;
   }
 
-  /* Premium plan cards - Stripe/Notion style */
+  /* Premium plan cards - Stripe/Notion style, refined */
   .plan-card {
     background: rgba(255, 255, 255, 0.98);
     border-radius: 24px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.5s var(--ease-bounce);
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.2);
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-smooth) forwards;
   }
+  .plan-card.free { animation-delay: 0.1s; }
+  .plan-card.premium { animation-delay: 0.25s; }
 
   .plan-card::before {
     content: '';
@@ -196,7 +296,22 @@
     width: 100%;
     height: 5px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%);
+    background-size: 200% 100%;
+    animation: shimmerText 5s ease-in-out infinite;
   }
+
+  /* Subtle sheen sweep across the whole card on hover */
+  .plan-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.9s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .plan-card:hover::after { left: 140%; }
 
   .plan-card:hover {
     transform: translateY(-15px) scale(1.02);
@@ -209,7 +324,8 @@
   }
 
   .plan-card.premium::before {
-    background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%);
+    background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%, #ffd700 100%);
+    background-size: 200% 100%;
     height: 7px;
   }
 
@@ -225,6 +341,7 @@
     border-radius: 0 24px 0 24px;
     box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
     animation: badgePulse 2s infinite;
+    z-index: 2;
   }
 
   @keyframes badgePulse {
@@ -246,13 +363,8 @@
     letter-spacing: -1px;
   }
 
-  .plan-name.free {
-    color: #667eea;
-  }
-
-  .plan-name.premium {
-    color: #ff6b6b;
-  }
+  .plan-name.free { color: #667eea; }
+  .plan-name.premium { color: #ff6b6b; }
 
   .plan-price {
     font-size: 3.5rem;
@@ -260,15 +372,12 @@
     margin-bottom: 0.3rem;
     letter-spacing: -2px;
     line-height: 1;
+    transition: transform 0.3s var(--ease-bounce);
   }
+  .plan-card:hover .plan-price { transform: scale(1.08); }
 
-  .plan-price.free {
-    color: #667eea;
-  }
-
-  .plan-price.premium {
-    color: #ff6b6b;
-  }
+  .plan-price.free { color: #667eea; }
+  .plan-price.premium { color: #ff6b6b; }
 
   .plan-price-sub {
     color: #6c757d;
@@ -286,11 +395,17 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.2s;
+    transition: all 0.25s var(--ease-smooth);
+    border-radius: 10px;
   }
 
   .plan-feature:hover {
-    transform: translateX(5px);
+    transform: translateX(8px);
+    background: rgba(102,126,234,0.06);
+    padding-left: 0.5rem;
+  }
+  .plan-card.premium .plan-feature:hover {
+    background: rgba(255,107,107,0.08);
   }
 
   .plan-feature i {
@@ -298,19 +413,16 @@
     font-size: 1.4rem;
     width: 30px;
     text-align: center;
+    transition: transform 0.3s var(--ease-bounce);
   }
+  .plan-feature:hover i { transform: scale(1.25) rotate(-8deg); }
 
-  .plan-feature.disabled {
-    color: #adb5bd;
-  }
+  .plan-feature.disabled { color: #adb5bd; }
+  .plan-feature.disabled i { color: #adb5bd; }
+  .plan-feature.disabled:hover { transform: none; background: none; padding-left: 0; }
+  .plan-feature.disabled:hover i { transform: none; }
 
-  .plan-feature.disabled i {
-    color: #adb5bd;
-  }
-
-  .plan-feature strong {
-    color: #2d3748;
-  }
+  .plan-feature strong { color: #2d3748; }
 
   .plan-btn {
     padding: 1.5rem 2.5rem;
@@ -318,12 +430,24 @@
     font-weight: 700;
     border-radius: 50px;
     border: none;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s var(--ease-bounce);
     margin: 0 2.5rem 2.5rem;
     display: block;
     text-align: center;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
   }
+
+  .plan-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    transition: left 0.6s;
+  }
+  .plan-btn:hover::before { left: 100%; }
 
   .plan-btn.free {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -354,31 +478,34 @@
     z-index: 2;
   }
 
-  .features-title {
-    text-align: center;
-    color: white;
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  }
-
-  .features-subtitle {
-    text-align: center;
-    color: rgba(255,255,255,0.7);
-    font-size: 1.2rem;
-    margin-bottom: 4rem;
-  }
-
   .feature-card {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 3rem 2rem;
     text-align: center;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.5s var(--ease-bounce);
     border: 1px solid rgba(255,255,255,0.2);
     backdrop-filter: blur(10px);
+    opacity: 0;
+    animation: fadeUp 0.8s var(--ease-smooth) forwards;
+    position: relative;
+    overflow: hidden;
   }
+  .feature-card:nth-child(1) { animation-delay: 0.1s; }
+  .feature-card:nth-child(2) { animation-delay: 0.25s; }
+  .feature-card:nth-child(3) { animation-delay: 0.4s; }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(102,126,234,0.12), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.9s var(--ease-smooth);
+    pointer-events: none;
+  }
+  .feature-card:hover::after { left: 140%; }
 
   .feature-card:hover {
     transform: translateY(-10px) scale(1.03);
@@ -397,6 +524,10 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    transition: transform 0.5s var(--ease-bounce);
+  }
+  .feature-card:hover .feature-icon {
+    transform: rotate(360deg) scale(1.1);
   }
 
   .feature-name {
@@ -421,12 +552,29 @@
     position: relative;
     z-index: 2;
   }
+  .footer-credit i {
+    color: #ff6b6b;
+    animation: heartBeat 1.6s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    .hero-title { font-size: 2.8rem; }
+    .hero-subtitle { font-size: 1.2rem; }
+    .hero-buttons { flex-direction: column; align-items: center; }
+    .plans-title, .features-title { font-size: 2.2rem; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="home-bg">
-  
+
+  <!-- Ambient glow orbs -->
+  <div class="glow-orb one"></div>
+  <div class="glow-orb two"></div>
+  <div class="glow-orb three"></div>
+
   <!-- Floating Particles -->
   <div class="particles">
     <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
@@ -438,6 +586,9 @@
     <div class="particle" style="left: 70%; animation-delay: 2.5s;"></div>
     <div class="particle" style="left: 80%; animation-delay: 4.5s;"></div>
     <div class="particle" style="left: 90%; animation-delay: 1.5s;"></div>
+    <div class="particle" style="left: 15%; animation-delay: 6s;"></div>
+    <div class="particle" style="left: 65%; animation-delay: 7s;"></div>
+    <div class="particle" style="left: 85%; animation-delay: 8s;"></div>
   </div>
 
   <!-- Hero Section -->
@@ -446,19 +597,19 @@
       <div class="hero-badge">
         <i class="bi bi-star-fill"></i> AI-Powered Document Intelligence
       </div>
-      
+
       <h1 class="hero-title">
         Document <span>AI</span>
       </h1>
-      
+
       <p class="hero-subtitle">
         Chat with your documents using advanced AI. Ask questions, get instant answers, and unlock insights from your PDFs.
       </p>
-      
+
       <div class="creator-name">
         <i class="bi bi-heart-fill"></i> Created by <strong>Ravi Singh Kalakoti</strong>
       </div>
-      
+
       <div class="hero-buttons">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}" class="btn-hero-primary">
@@ -475,21 +626,21 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Plans Section -->
   <div class="plans-section">
     <div class="container">
-      <h2 class="plans-title">
+      <h2 class="plans-title anim-fade-up">
         Choose Your Plan
       </h2>
-      <p class="plans-subtitle">
+      <p class="plans-subtitle anim-fade-up" style="animation-delay:0.1s;">
         Start free, upgrade when you need more power
       </p>
-      
+
       <div class="row">
         <!-- Free Plan -->
         <div class="col-md-6 mb-4">
-          <div class="plan-card">
+          <div class="plan-card free">
             <div class="plan-header">
               <h3 class="plan-name free">
                 <i class="bi bi-free"></i> Free
@@ -497,7 +648,7 @@
               <div class="plan-price free">₹0</div>
               <div class="plan-price-sub">Forever free • No credit card</div>
             </div>
-            
+
             <div class="plan-features">
               <div class="plan-feature">
                 <i class="bi bi-check-circle-fill"></i>
@@ -524,7 +675,7 @@
                 Advanced Analytics
               </div>
             </div>
-            
+
             {% if user.is_authenticated %}
               <a href="{% url 'dashboard' %}" class="plan-btn free">
                 <i class="bi bi-arrow-right"></i> Use Free Plan
@@ -536,7 +687,7 @@
             {% endif %}
           </div>
         </div>
-        
+
         <!-- Premium Plan -->
         <div class="col-md-6 mb-4">
           <div class="plan-card premium">
@@ -550,7 +701,7 @@
               <div class="plan-price premium">{{ premium_price }}</div>
               <div class="plan-price-sub">Per month • Cancel anytime</div>
             </div>
-            
+
             <div class="plan-features">
               <div class="plan-feature">
                 <i class="bi bi-check-circle-fill"></i>
@@ -577,7 +728,7 @@
                 No Restrictions
               </div>
             </div>
-            
+
             {% if user.is_authenticated %}
               <a href="{% url 'subscription_plan' %}" class="plan-btn premium">
                 <i class="bi bi-star-fill"></i> Upgrade to Premium
@@ -592,17 +743,17 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Features Section -->
   <div class="features-section">
     <div class="container">
-      <h2 class="features-title">
+      <h2 class="features-title anim-fade-up">
         Why Choose Document AI?
       </h2>
-      <p class="features-subtitle">
+      <p class="features-subtitle anim-fade-up" style="animation-delay:0.1s;">
         Built with cutting-edge technology for maximum productivity
       </p>
-      
+
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="feature-card">
@@ -615,7 +766,7 @@
             </p>
           </div>
         </div>
-        
+
         <div class="col-md-4 mb-4">
           <div class="feature-card">
             <div class="feature-icon">
@@ -627,7 +778,7 @@
             </p>
           </div>
         </div>
-        
+
         <div class="col-md-4 mb-4">
           <div class="feature-card">
             <div class="feature-icon">
@@ -642,7 +793,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Footer Credit -->
   <div class="footer-credit">
     <p>
@@ -652,6 +803,6 @@
       © 2026 Document AI. All rights reserved.
     </p>
   </div>
-  
+
 </div>
 {% endblock %}
