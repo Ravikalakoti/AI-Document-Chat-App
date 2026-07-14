@@ -96,9 +96,56 @@
     animation: fadeUp 0.9s var(--ease-smooth) forwards;
   }
 
+  /* Top scrolling ticker/carousel */
+  .top-ticker {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    padding: 0.7rem 0;
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: tickerScroll 28s linear infinite;
+  }
+
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0 2.5rem;
+    white-space: nowrap;
+  }
+
+  .ticker-item i {
+    color: #ffd700;
+    font-size: 1rem;
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @media (max-width: 768px) {
+    .ticker-item { font-size: 0.8rem; padding: 0 1.5rem; }
+  }
+
   /* Hero section */
   .hero-section {
-    padding: 8rem 0 5rem;
+    padding: 5rem 0 5rem;
     text-align: center;
     position: relative;
     z-index: 2;
@@ -569,6 +616,24 @@
 
 {% block content %}
 <div class="home-bg">
+
+  <!-- Top Moving Ticker -->
+  <div class="top-ticker">
+    <div class="ticker-track">
+      <!-- Set 1 -->
+      <span class="ticker-item"><i class="bi bi-lightning-charge-fill"></i> Instant AI Answers from Your Documents</span>
+      <span class="ticker-item"><i class="bi bi-shield-check"></i> Enterprise-Grade Security</span>
+      <span class="ticker-item"><i class="bi bi-graph-up-arrow"></i> Trusted by Growing Teams</span>
+      <span class="ticker-item"><i class="bi bi-file-earmark-text"></i> Chat with PDFs, Docs & More</span>
+      <span class="ticker-item"><i class="bi bi-stars"></i> Powered by Advanced AI</span>
+      <!-- Set 2 (duplicate for seamless loop) -->
+      <span class="ticker-item"><i class="bi bi-lightning-charge-fill"></i> Instant AI Answers from Your Documents</span>
+      <span class="ticker-item"><i class="bi bi-shield-check"></i> Enterprise-Grade Security</span>
+      <span class="ticker-item"><i class="bi bi-graph-up-arrow"></i> Trusted by Growing Teams</span>
+      <span class="ticker-item"><i class="bi bi-file-earmark-text"></i> Chat with PDFs, Docs & More</span>
+      <span class="ticker-item"><i class="bi bi-stars"></i> Powered by Advanced AI</span>
+    </div>
+  </div>
 
   <!-- Ambient glow orbs -->
   <div class="glow-orb one"></div>
