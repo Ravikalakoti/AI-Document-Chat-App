@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import dashboard, upload_page, document_detail, upload_document, chat_with_document,\
-    delete_document, analytics, document_analytics, home, subscription_plan, subscribe
+    delete_document, analytics, document_analytics, home, subscription_plan, subscribe, chat_history
 
 urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('', home, name='home'),
     path('subscription/', subscription_plan, name='subscription_plan'),
     path('subscribe/', subscribe, name='subscribe'),
+    path("chat/<int:doc_id>/history/", chat_history),
 ]
